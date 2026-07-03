@@ -101,7 +101,7 @@ export default function SharedChordSheetPage() {
           {hasImages ? "Imagens da Cifra" : "Cifra"}
         </h3>
         {hasImages ? (
-          <div className="-mx-6 space-y-4 border-y border-slate-200 bg-slate-50 py-4">
+          <div className="-mx-6 border-y border-slate-200 bg-slate-50">
             {images.map((image, index) => (
               <img
                 key={`${index}-${image.slice(0, 24)}`}
