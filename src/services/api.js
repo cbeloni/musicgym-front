@@ -221,12 +221,22 @@ export async function fetchChordSheet(id) {
   return data;
 }
 
-export async function createChordSheet(title, artist, keySignature, content, youtubeUrl, scrollSpeed = 1, isPrivate = false) {
+export async function createChordSheet(
+  title,
+  artist,
+  keySignature,
+  content,
+  imageData,
+  youtubeUrl,
+  scrollSpeed = 1,
+  isPrivate = false
+) {
   const { data } = await api.post("/chord-sheets", {
     title,
     artist,
     key_signature: keySignature || null,
     content,
+    image_data: imageData && imageData.length ? imageData : null,
     youtube_url: youtubeUrl || null,
     scroll_speed: scrollSpeed,
     is_private: isPrivate
@@ -240,6 +250,7 @@ export async function updateChordSheet(
   artist,
   keySignature,
   content,
+  imageData,
   youtubeUrl,
   scrollSpeed = 1,
   isPrivate = false
@@ -249,6 +260,7 @@ export async function updateChordSheet(
     artist,
     key_signature: keySignature || null,
     content,
+    image_data: imageData && imageData.length ? imageData : null,
     youtube_url: youtubeUrl || null,
     scroll_speed: scrollSpeed,
     is_private: isPrivate

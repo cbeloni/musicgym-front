@@ -38,6 +38,8 @@ export default function SharedChordSheetPage() {
   }, [shareToken]);
 
   const sheetHasTab = chordSheet && TAB_LINE_REGEX.test(chordSheet.content);
+  const images = Array.isArray(chordSheet?.image_data) ? chordSheet.image_data : [];
+  const hasImages = images.length > 0;
 
   const renderContent = (content) => {
     if (!tabHidden) return content;
@@ -95,10 +97,25 @@ export default function SharedChordSheetPage() {
       </div>
 
       <div className="panel p-6">
-        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-4">Cifra</h3>
-        <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-sm leading-8 text-slate-800">
-          {renderContent(chordSheet.content)}
-        </pre>
+        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-4">
+          {hasImages ? "Imagens da Cifra" : "Cifra"}
+        </h3>
+        {hasImages ? (
+          <div className="-mx-6 space-y-4 border-y border-slate-200 bg-slate-50 py-4">
+            {images.map((image, index) => (
+              <img
+                key={`${index}-${image.slice(0, 24)}`}
+                src={image}
+                alt={`Imagem da cifra ${index + 1} - ${chordSheet.title}`}
+                className="block w-full h-auto select-none"
+              />
+            ))}
+          </div>
+        ) : (
+          <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-sm leading-8 text-slate-800">
+            {renderContent(chordSheet.content)}
+          </pre>
+        )}
         <div className="mt-5 border-t border-slate-100 pt-4 text-xs text-slate-500">
           <span className="font-semibold text-slate-700">Criado por:</span>{" "}
           {chordSheet.created_by_name || "Usuário"} · {Number(chordSheet.view_count || 0)} visualizações
