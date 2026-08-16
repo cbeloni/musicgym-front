@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import AutoScrollControls from "../components/AutoScrollControls";
+import PdfViewer from "../components/PdfViewer";
 import YouTubePlayer from "../components/YouTubePlayer";
 import { fetchChordSheetByToken, recordChordSheetView } from "../services/api";
 
@@ -104,11 +105,10 @@ export default function SharedChordSheetPage() {
           <div className="-mx-6 border-y border-slate-200 bg-slate-50">
             {images.map((image, index) =>
               image.startsWith("data:application/pdf") ? (
-                <iframe
+                <PdfViewer
                   key={`${index}-${image.slice(0, 24)}`}
-                  src={image}
+                  dataUri={image}
                   title={`PDF da cifra ${index + 1} - ${chordSheet.title}`}
-                  className="block w-full h-[80vh] select-none"
                 />
               ) : (
                 <img
