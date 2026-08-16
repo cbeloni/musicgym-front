@@ -112,7 +112,8 @@ export default function PdfViewer({ dataUri, title }) {
         }
 
         if (!cancelled) setPages(rendered);
-      } catch {
+      } catch (err) {
+        console.error("Falha ao renderizar PDF:", err);
         if (!cancelled) setError("Não foi possível exibir este PDF.");
       }
     };
