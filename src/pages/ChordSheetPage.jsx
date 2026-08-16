@@ -15,37 +15,6 @@ import {
 } from "../services/api";
 import { useAuth } from "../components/AuthContext";
 
-const mockChord = {
-  id: 1,
-  title: "Oceans",
-  artist: "Hillsong United",
-  content: `[Intro]
-Am  F  C  G
-
-[Verso]
-Am                F
-You call me out upon the waters
-C                    G
-The great unknown where feet may fail
-Am               F
-And there I find you in the mystery
-C                      G
-In oceans deep my faith will stand
-
-[Pré-Refrão]
-Am        F
-And I will call upon your name
-C                 G
-And keep my eyes above the waves
-
-[Refrão]
-F         C         G
-Spirit lead me where my trust is without borders
-F         C         G
-Let me walk upon the waters wherever you would call me`,
-  youtube_url: "https://www.youtube.com/watch?v=dy9nwe9_xzw",
-};
-
 // Regex para identificar linhas de tablatura: começa com letra maiúscula seguida de pipe
 const TAB_LINE_REGEX = /^[A-Z]\|/;
 
@@ -58,7 +27,8 @@ export default function ChordSheetPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { isAuthenticated, user } = useAuth();
-  const [chordSheet, setChordSheet] = useState(mockChord);
+  const [chordSheet, setChordSheet] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [currentScrollSpeed, setCurrentScrollSpeed] = useState(1);
   const [savedScrollSpeed, setSavedScrollSpeed] = useState(1);
   const [tabHidden, setTabHidden] = useState(true);
@@ -67,7 +37,7 @@ export default function ChordSheetPage() {
   const lastScheduledSpeedRef = useRef(1);
 
   const isOwner = isAuthenticated && user && chordSheet && chordSheet.created_by_id === user.id;
-  const sheetHasTab = hasTabLines(chordSheet.content);
+  const sheetHasTab = chordSheet ? hasTabLines(chordSheet.content) : false;
   const images = Array.isArray(chordSheet?.image_data) ? chordSheet.image_data : [];
   const hasImages = images.length > 0;
 
@@ -102,7 +72,10 @@ export default function ChordSheetPage() {
           setTabHidden(true);
         }
       })
-      .catch(() => setChordSheet(mockChord));
+      .catch(() => {
+        setChordSheet(null);
+      })
+      .finally(() => setLoading(false));
   }, [id, isAuthenticated]);
 
   // Persiste a preferência de tablatura no Redis quando o usuário alterna
@@ -126,7 +99,7 @@ export default function ChordSheetPage() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [chordSheet.id]);
+  }, [chordSheet?.id]);
 
   useEffect(() => {
     if (!id || !isOwner) return;
@@ -186,6 +159,22 @@ export default function ChordSheetPage() {
       .filter((line) => !TAB_LINE_REGEX.test(line))
       .join("\n");
   };
+
+  if (loading) {
+    return (
+      <section className="space-y-6 animate-fade-in">
+        <div className="panel p-12 text-center animate-pulse">Carregando cifra...</div>
+      </section>
+    );
+  }
+
+  if (!chordSheet) {
+    return (
+      <section className="space-y-6 animate-fade-in">
+        <div className="panel p-12 text-center text-slate-500">Cifra não encontrada</div>
+      </section>
+    );
+  }
 
   return (
     <article className="space-y-6 animate-fade-in pb-32">
@@ -268,18 +257,27 @@ export default function ChordSheetPage() {
       {/* ── Chord content ── */}
       <div className="panel p-6">
         <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-4">
-          {hasImages ? "Imagens da Cifra" : "Cifra"}
+          {hasImages ? "Arquivos da Cifra" : "Cifra"}
         </h3>
         {hasImages ? (
           <div className="-mx-6 border-y border-slate-200 bg-slate-50">
-            {images.map((image, index) => (
-              <img
-                key={`${index}-${image.slice(0, 24)}`}
-                src={image}
-                alt={`Imagem da cifra ${index + 1} - ${chordSheet.title}`}
-                className="block w-full h-auto select-none"
-              />
-            ))}
+            {images.map((image, index) =>
+              image.startsWith("data:application/pdf") ? (
+                <iframe
+                  key={`${index}-${image.slice(0, 24)}`}
+                  src={image}
+                  title={`PDF da cifra ${index + 1} - ${chordSheet.title}`}
+                  className="block w-full h-[80vh] select-none"
+                />
+              ) : (
+                <img
+                  key={`${index}-${image.slice(0, 24)}`}
+                  src={image}
+                  alt={`Imagem da cifra ${index + 1} - ${chordSheet.title}`}
+                  className="block w-full h-auto select-none"
+                />
+              )
+            )}
           </div>
         ) : (
           <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-sm leading-8 text-slate-800">

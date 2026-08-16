@@ -98,18 +98,27 @@ export default function SharedChordSheetPage() {
 
       <div className="panel p-6">
         <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-4">
-          {hasImages ? "Imagens da Cifra" : "Cifra"}
+          {hasImages ? "Arquivos da Cifra" : "Cifra"}
         </h3>
         {hasImages ? (
           <div className="-mx-6 border-y border-slate-200 bg-slate-50">
-            {images.map((image, index) => (
-              <img
-                key={`${index}-${image.slice(0, 24)}`}
-                src={image}
-                alt={`Imagem da cifra ${index + 1} - ${chordSheet.title}`}
-                className="block w-full h-auto select-none"
-              />
-            ))}
+            {images.map((image, index) =>
+              image.startsWith("data:application/pdf") ? (
+                <iframe
+                  key={`${index}-${image.slice(0, 24)}`}
+                  src={image}
+                  title={`PDF da cifra ${index + 1} - ${chordSheet.title}`}
+                  className="block w-full h-[80vh] select-none"
+                />
+              ) : (
+                <img
+                  key={`${index}-${image.slice(0, 24)}`}
+                  src={image}
+                  alt={`Imagem da cifra ${index + 1} - ${chordSheet.title}`}
+                  className="block w-full h-auto select-none"
+                />
+              )
+            )}
           </div>
         ) : (
           <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-sm leading-8 text-slate-800">

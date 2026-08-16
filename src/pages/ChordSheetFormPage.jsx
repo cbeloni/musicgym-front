@@ -49,9 +49,11 @@ export default function ChordSheetFormPage() {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
-    const invalidFile = files.find((file) => !file.type.startsWith("image/"));
+    const invalidFile = files.find(
+      (file) => !file.type.startsWith("image/") && file.type !== "application/pdf"
+    );
     if (invalidFile) {
-      setError("Selecione apenas arquivos de imagem válidos.");
+      setError("Selecione apenas arquivos de imagem ou PDF.");
       e.target.value = "";
       return;
     }
@@ -120,7 +122,7 @@ export default function ChordSheetFormPage() {
     }
 
     if (entryMode === "image" && !hasImages) {
-      setError("Selecione uma ou mais imagens, ou tire uma foto.");
+      setError("Selecione uma ou mais imagens ou PDFs.");
       setLoading(false);
       return;
     }
@@ -178,7 +180,7 @@ export default function ChordSheetFormPage() {
           {isEditMode ? "Editar Cifra" : "Criar Nova Cifra"}
         </h2>
         <p className="mt-2 text-sm text-slate-600">
-          Insira os detalhes da música, a cifra em texto ou uma imagem da cifra.
+          Insira os detalhes da música, a cifra em texto, uma imagem ou um PDF.
         </p>
       </header>
 
@@ -281,9 +283,9 @@ export default function ChordSheetFormPage() {
                   : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
               }`}
             >
-              <div className="text-sm font-bold">Imagem da cifra</div>
+              <div className="text-sm font-bold">Imagem ou PDF</div>
               <div className="mt-1 text-[11px] leading-4 text-slate-500">
-                Mostra o envio por arquivo ou foto da cifra.
+                Mostra o envio por arquivo, foto ou PDF da cifra.
               </div>
             </button>
           </div>
@@ -293,18 +295,17 @@ export default function ChordSheetFormPage() {
           <div>
             <div className="flex justify-between items-center mb-2">
               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
-                Imagem da Cifra
+                Imagem ou PDF da Cifra
               </label>
               <span className="text-[10px] text-slate-400 font-semibold uppercase">
-                Upload, câmera ou múltiplas
+                Upload, câmera ou múltiplos
               </span>
             </div>
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
                 <input
                   type="file"
-                  accept="image/*"
-                  capture="environment"
+                  accept="image/*,application/pdf,.pdf"
                   multiple
                   onChange={handleImageFileChange}
                   className="block w-full text-xs text-slate-500 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-slate-700"
@@ -319,7 +320,7 @@ export default function ChordSheetFormPage() {
                 </button>
               </div>
               <div className="text-[11px] leading-5 text-slate-500">
-                Selecione várias imagens ou use a câmera do celular para anexar fotos da cifra.
+                Selecione imagens ou PDFs da cifra. Em dispositivos móveis, você pode usar a câmera para tirar fotos.
               </div>
               {imageDataList.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -327,7 +328,7 @@ export default function ChordSheetFormPage() {
                     <div key={`${index}-${image.slice(0, 24)}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                       <div className="mb-2 flex items-center justify-between gap-3">
                         <span className="text-[11px] font-semibold uppercase text-slate-500">
-                          Imagem {index + 1}
+                          Arquivo {index + 1}
                         </span>
                         <button
                           type="button"
@@ -337,17 +338,25 @@ export default function ChordSheetFormPage() {
                           Remover
                         </button>
                       </div>
-                      <img
-                        src={image}
-                        alt={`Prévia da imagem da cifra ${index + 1}`}
-                        className="max-h-64 w-full rounded-lg object-contain bg-white"
-                      />
+                      {image.startsWith("data:application/pdf") ? (
+                        <iframe
+                          src={image}
+                          title={`Prévia do PDF da cifra ${index + 1}`}
+                          className="h-96 w-full rounded-lg bg-white"
+                        />
+                      ) : (
+                        <img
+                          src={image}
+                          alt={`Prévia da imagem da cifra ${index + 1}`}
+                          className="max-h-64 w-full rounded-lg object-contain bg-white"
+                        />
+                      )}
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs text-slate-400">
-                  Nenhuma imagem selecionada.
+                  Nenhum arquivo selecionado.
                 </div>
               )}
             </div>
