@@ -13,7 +13,7 @@
     "@dnd-kit/sortable": "^8.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "axios": "^1.7.7",
-    "pdfjs-dist": "^6.2.108",
+    "pdfjs-dist": "5.4.54",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-player": "^2.16.0",
