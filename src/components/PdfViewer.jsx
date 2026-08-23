@@ -26,7 +26,19 @@ function decodePdfDataUri(dataUri) {
   return bytes;
 }
 
-export default function PdfViewer({ dataUri, title }) {
+// Carrega o PDF: a partir de um data URI (data:application/pdf;base64,...)
+// ou de uma URL pública (quando a cifra está no bucket).
+async function loadPdfSource(src) {
+  if (src.startsWith("data:")) {
+    return decodePdfDataUri(src);
+  }
+  const response = await fetch(src);
+  if (!response.ok) throw new Error("Falha ao baixar o PDF do servidor.");
+  const buffer = await response.arrayBuffer();
+  return new Uint8Array(buffer);
+}
+
+export default function PdfViewer({ src, title }) {
   const containerRef = useRef(null);
   const pdfRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -65,7 +77,7 @@ export default function PdfViewer({ dataUri, title }) {
     const renderPages = async () => {
       setError(null);
       try {
-        const data = decodePdfDataUri(dataUri);
+        const data = await loadPdfSource(src);
         if (!data) throw new Error("PDF inválido");
 
         const pdfjs = await import("pdfjs-dist");
@@ -127,7 +139,7 @@ export default function PdfViewer({ dataUri, title }) {
         pdfRef.current = null;
       }
     };
-  }, [dataUri, containerWidth]);
+  }, [src, containerWidth]);
 
   if (error) {
     return (

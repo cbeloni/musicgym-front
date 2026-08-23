@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import AutoScrollControls from "../components/AutoScrollControls";
 import PdfViewer from "../components/PdfViewer";
 import YouTubePlayer from "../components/YouTubePlayer";
-import { fetchChordSheetByToken, recordChordSheetView } from "../services/api";
+import { fetchChordSheetByToken, isPdfAsset, recordChordSheetView, resolveChordSheetAsset } from "../services/api";
 
 // Regex para identificar linhas de tablatura
 const TAB_LINE_REGEX = /^[A-Z]\|/;
@@ -103,22 +103,23 @@ export default function SharedChordSheetPage() {
         </h3>
         {hasImages ? (
           <div className="-mx-6 border-y border-slate-200 bg-slate-50">
-            {images.map((image, index) =>
-              image.startsWith("data:application/pdf") ? (
+            {images.map((image, index) => {
+              const src = resolveChordSheetAsset(chordSheet, image);
+              return isPdfAsset(image) ? (
                 <PdfViewer
-                  key={`${index}-${image.slice(0, 24)}`}
-                  dataUri={image}
+                  key={`${index}-${src.slice(0, 24)}`}
+                  src={src}
                   title={`PDF da cifra ${index + 1} - ${chordSheet.title}`}
                 />
               ) : (
                 <img
-                  key={`${index}-${image.slice(0, 24)}`}
-                  src={image}
+                  key={`${index}-${src.slice(0, 24)}`}
+                  src={src}
                   alt={`Imagem da cifra ${index + 1} - ${chordSheet.title}`}
                   className="block w-full h-auto select-none"
                 />
-              )
-            )}
+              );
+            })}
           </div>
         ) : (
           <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-sm leading-8 text-slate-800">

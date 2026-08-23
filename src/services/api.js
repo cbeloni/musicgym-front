@@ -221,6 +221,29 @@ export async function fetchChordSheet(id) {
   return data;
 }
 
+/**
+ * Resolve o src de um item de `image_data`.
+ * - Se a cifra estiver armazenada no bucket (is_bucket_storage), o item é um
+ *   caminho (chave) e deve ser montado com o bucket_base_url.
+ * - Caso contrário, o item já é um data URI (legado) e é retornado como está.
+ */
+export function resolveChordSheetAsset(chordSheet, item) {
+  if (
+    chordSheet?.is_bucket_storage &&
+    chordSheet?.bucket_base_url &&
+    item &&
+    !item.startsWith("data:")
+  ) {
+    return `${chordSheet.bucket_base_url.replace(/\/+$/, "")}/${item.replace(/^\/+/, "")}`;
+  }
+  return item;
+}
+
+/** Detecta se um item de image_data é um PDF (data URI de PDF ou caminho .pdf). */
+export function isPdfAsset(item) {
+  return !!item && (item.startsWith("data:application/pdf") || /\.pdf($|\?)/i.test(item));
+}
+
 export async function createChordSheet(
   title,
   artist,

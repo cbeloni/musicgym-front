@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../components/AuthContext";
-import { createChordSheet, fetchChordSheet, updateChordSheet } from "../services/api";
+import { createChordSheet, fetchChordSheet, isPdfAsset, resolveChordSheetAsset, updateChordSheet } from "../services/api";
 
 export default function ChordSheetFormPage() {
   const { id } = useParams();
@@ -18,6 +18,8 @@ export default function ChordSheetFormPage() {
   const [content, setContent] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [createdById, setCreatedById] = useState(null);
+  const [isBucketStorage, setIsBucketStorage] = useState(false);
+  const [bucketBaseUrl, setBucketBaseUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [fetching, setFetching] = useState(false);
@@ -26,6 +28,13 @@ export default function ChordSheetFormPage() {
 
   const hasImages = imageDataList.length > 0;
   const hasContent = content.trim().length > 0;
+
+  // Monta a URL do arquivo quando a cifra está no bucket (image_data contém caminhos)
+  const previewSrc = (image) =>
+    resolveChordSheetAsset(
+      { is_bucket_storage: isBucketStorage, bucket_base_url: bucketBaseUrl },
+      image
+    );
 
   const selectTextMode = () => {
     setEntryMode("text");
@@ -95,6 +104,8 @@ export default function ChordSheetFormPage() {
       setContent(data.content);
       setIsPrivate(Boolean(data.is_private));
       setCreatedById(data.created_by_id);
+      setIsBucketStorage(Boolean(data.is_bucket_storage));
+      setBucketBaseUrl(data.bucket_base_url || "");
       setEntryMode(data.image_data?.length ? "image" : "text");
     } catch (err) {
       setError("Erro ao carregar a cifra para edição.");
@@ -324,35 +335,38 @@ export default function ChordSheetFormPage() {
               </div>
               {imageDataList.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {imageDataList.map((image, index) => (
-                    <div key={`${index}-${image.slice(0, 24)}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <span className="text-[11px] font-semibold uppercase text-slate-500">
-                          Arquivo {index + 1}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => removeImageAt(index)}
-                          className="rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
-                        >
-                          Remover
-                        </button>
+                  {imageDataList.map((image, index) => {
+                    const src = previewSrc(image);
+                    return (
+                      <div key={`${index}-${src.slice(0, 24)}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <div className="mb-2 flex items-center justify-between gap-3">
+                          <span className="text-[11px] font-semibold uppercase text-slate-500">
+                            Arquivo {index + 1}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeImageAt(index)}
+                            className="rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+                          >
+                            Remover
+                          </button>
+                        </div>
+                        {isPdfAsset(image) ? (
+                          <iframe
+                            src={src}
+                            title={`Prévia do PDF da cifra ${index + 1}`}
+                            className="h-96 w-full rounded-lg bg-white"
+                          />
+                        ) : (
+                          <img
+                            src={src}
+                            alt={`Prévia da imagem da cifra ${index + 1}`}
+                            className="max-h-64 w-full rounded-lg object-contain bg-white"
+                          />
+                        )}
                       </div>
-                      {image.startsWith("data:application/pdf") ? (
-                        <iframe
-                          src={image}
-                          title={`Prévia do PDF da cifra ${index + 1}`}
-                          className="h-96 w-full rounded-lg bg-white"
-                        />
-                      ) : (
-                        <img
-                          src={image}
-                          alt={`Prévia da imagem da cifra ${index + 1}`}
-                          className="max-h-64 w-full rounded-lg object-contain bg-white"
-                        />
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs text-slate-400">
