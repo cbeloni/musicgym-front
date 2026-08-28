@@ -235,3 +235,96 @@ body.hide-bars-active #autoscroll-panel {
     to { opacity: 1; transform: translateY(0); }
   }
 }
+
+@media (max-width: 767px) {
+  #root {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .drum-machine-page {
+    width: 100%;
+    padding-top: 0.25rem;
+  }
+
+  .drum-machine-heading {
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .drum-machine-heading h2 {
+    font-size: 2rem;
+    line-height: 1.1;
+  }
+
+  .drum-machine-subtitle {
+    font-size: 0.8rem;
+    line-height: 1.45rem;
+  }
+
+  .drum-toolbar {
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .drum-tool-button,
+  .drum-play-button,
+  .tempo-control,
+  .drum-toolbar-select {
+    height: 2.75rem;
+  }
+
+  .drum-tool-button {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    font-size: 0.7rem;
+  }
+
+  .drum-toolbar-select {
+    max-width: 100%;
+    flex: 1 1 9rem;
+    font-size: 0.7rem;
+  }
+
+  .drum-grid {
+    min-width: 0;
+    grid-template-columns: minmax(6.75rem, 0.9fr) repeat(16, minmax(1.15rem, 1fr));
+    gap: 3px;
+    padding: 0.5rem;
+  }
+
+  .drum-grid-corner {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+    font-size: 0.55rem;
+  }
+
+  .drum-step-number {
+    height: 1.5rem;
+    font-size: 0.55rem;
+  }
+
+  .drum-instrument-label {
+    min-height: 2.75rem;
+    padding: 0 0.25rem;
+    font-size: 0.65rem;
+    line-height: 0.85rem;
+    text-align: right;
+  }
+
+  .drum-cell {
+    min-height: 2.75rem;
+    border-radius: 0.4rem;
+  }
+
+  .drum-machine-footnote {
+    padding: 0 0.75rem;
+    font-size: 0.65rem;
+    line-height: 1rem;
+  }
+
+  .drum-modal-panel {
+    max-height: calc(100vh - 1.5rem);
+    padding: 0.75rem;
+  }
+}
