@@ -15,6 +15,7 @@ export default function ChordSheetFormPage() {
   const [imageDataList, setImageDataList] = useState([]);
   const [entryMode, setEntryMode] = useState("text");
   const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [drumMachine, setDrumMachine] = useState("");
   const [content, setContent] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [createdById, setCreatedById] = useState(null);
@@ -101,6 +102,7 @@ export default function ChordSheetFormPage() {
       setKeySignature(data.key_signature || "");
       setImageDataList(Array.isArray(data.image_data) ? data.image_data : []);
       setYoutubeUrl(data.youtube_url || "");
+      setDrumMachine(data.drum_machine || "");
       setContent(data.content);
       setIsPrivate(Boolean(data.is_private));
       setCreatedById(data.created_by_id);
@@ -149,7 +151,8 @@ export default function ChordSheetFormPage() {
           entryMode === "image" ? imageDataList : [],
           youtubeUrl,
           1,
-          isPrivate
+          isPrivate,
+          drumMachine
         );
         navigate(`/cifras/${id}`);
       } else {
@@ -161,7 +164,8 @@ export default function ChordSheetFormPage() {
           entryMode === "image" ? imageDataList : [],
           youtubeUrl,
           1,
-          isPrivate
+          isPrivate,
+          drumMachine
         );
         navigate(`/cifras/${newSheet.id}`);
       }

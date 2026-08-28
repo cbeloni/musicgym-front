@@ -252,7 +252,8 @@ export async function createChordSheet(
   imageData,
   youtubeUrl,
   scrollSpeed = 1,
-  isPrivate = false
+  isPrivate = false,
+  drumMachine = null
 ) {
   const { data } = await api.post("/chord-sheets", {
     title,
@@ -261,6 +262,7 @@ export async function createChordSheet(
     content,
     image_data: imageData && imageData.length ? imageData : null,
     youtube_url: youtubeUrl || null,
+    drum_machine: drumMachine || null,
     scroll_speed: scrollSpeed,
     is_private: isPrivate
   });
@@ -276,7 +278,8 @@ export async function updateChordSheet(
   imageData,
   youtubeUrl,
   scrollSpeed = 1,
-  isPrivate = false
+  isPrivate = false,
+  drumMachine = null
 ) {
   const { data } = await api.put(`/chord-sheets/${id}`, {
     title,
@@ -285,6 +288,7 @@ export async function updateChordSheet(
     content,
     image_data: imageData && imageData.length ? imageData : null,
     youtube_url: youtubeUrl || null,
+    drum_machine: drumMachine || null,
     scroll_speed: scrollSpeed,
     is_private: isPrivate
   });
@@ -294,6 +298,13 @@ export async function updateChordSheet(
 export async function updateChordSheetScrollSpeed(id, scrollSpeed) {
   const { data } = await api.put(`/chord-sheets/${id}/scroll-speed`, {
     scroll_speed: scrollSpeed
+  });
+  return data;
+}
+
+export async function updateChordSheetDrumMachine(id, drumMachine) {
+  const { data } = await api.put(`/chord-sheets/${id}/drum-machine`, {
+    drum_machine: drumMachine || null
   });
   return data;
 }

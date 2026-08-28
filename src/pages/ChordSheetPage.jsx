@@ -4,6 +4,8 @@ import AutoScrollControls from "../components/AutoScrollControls";
 import PdfViewer from "../components/PdfViewer";
 import ShareModal from "../components/ShareModal";
 import YouTubePlayer from "../components/YouTubePlayer";
+import DrumMachineEditor from "../components/DrumMachineEditor";
+import DrumMachinePlayer from "../components/DrumMachinePlayer";
 import {
   fetchChordSheet,
   fetchChordSheetSharedUsers,
@@ -15,6 +17,7 @@ import {
   shareChordSheet,
   unshareChordSheet,
   updateChordSheetScrollSpeed,
+  updateChordSheetDrumMachine,
 } from "../services/api";
 import { useAuth } from "../components/AuthContext";
 
@@ -36,6 +39,10 @@ export default function ChordSheetPage() {
   const [savedScrollSpeed, setSavedScrollSpeed] = useState(1);
   const [tabHidden, setTabHidden] = useState(true);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [drumModalMode, setDrumModalMode] = useState(null);
+  const [drumSaving, setDrumSaving] = useState(false);
+  const [drumPlayRequest, setDrumPlayRequest] = useState(0);
+  const [drumStopRequest, setDrumStopRequest] = useState(0);
   const saveTimeoutRef = useRef(null);
   const lastScheduledSpeedRef = useRef(1);
 
@@ -43,6 +50,7 @@ export default function ChordSheetPage() {
   const sheetHasTab = chordSheet ? hasTabLines(chordSheet.content) : false;
   const images = Array.isArray(chordSheet?.image_data) ? chordSheet.image_data : [];
   const hasImages = images.length > 0;
+  const canEditDrumMachine = isAuthenticated && isOwner;
 
   // Carrega a cifra e a preferência de tablatura
   useEffect(() => {
@@ -91,6 +99,20 @@ export default function ChordSheetPage() {
       return newVal;
     });
   }, [isAuthenticated, id]);
+
+  const saveDrumMachine = async (drumMachine) => {
+    if (!id || !canEditDrumMachine) return;
+    setDrumSaving(true);
+    try {
+      const updated = await updateChordSheetDrumMachine(id, drumMachine);
+      setChordSheet((prev) => ({ ...prev, drum_machine: updated.drum_machine || drumMachine }));
+      setDrumModalMode(null);
+    } catch {
+      window.alert("Não foi possível salvar a batida na cifra.");
+    } finally {
+      setDrumSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (saveTimeoutRef.current) {
@@ -217,11 +239,32 @@ export default function ChordSheetPage() {
                   {tabHidden ? "📄 Mostrar Tablatura" : "🎸 Ocultar Tablatura"}
                 </button>
               )}
+              {!chordSheet.drum_machine && canEditDrumMachine && (
+                <button type="button" onClick={() => setDrumModalMode("new")} className="btn-outline text-xs px-4 py-2">
+                  🥁 Drum Machine
+                </button>
+              )}
+              {chordSheet.drum_machine && (
+                <div className="drum-machine-actions">
+                  <span className="drum-machine-actions-label">🥁 Drum Machine</span>
+                  <div className="drum-machine-actions-buttons">
+                    <button type="button" onClick={() => setDrumPlayRequest((value) => value + 1)} className="btn-outline text-xs px-4 py-2">
+                      ▶ Tocar
+                    </button>
+                    {canEditDrumMachine && (
+                      <button type="button" onClick={() => { setDrumStopRequest((value) => value + 1); setDrumModalMode("edit"); }} className="btn-outline text-xs px-4 py-2">
+                        ✏️ Editar
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           {/* YouTube Player no lugar do antigo botão "Editar Cifra" */}
           <div className="w-full sm:w-80 lg:w-96 shrink-0">
             <YouTubePlayer url={chordSheet.youtube_url} />
+            {chordSheet.drum_machine && <DrumMachinePlayer drumMachineUrl={chordSheet.drum_machine} playRequest={drumPlayRequest} stopRequest={drumStopRequest} />}
           </div>
         </div>
 
@@ -251,6 +294,25 @@ export default function ChordSheetPage() {
         fetchSharedUsers={fetchChordSheetSharedUsers}
         resourceId={Number(id)}
       />
+
+      {drumModalMode && (
+        <div className="drum-modal-backdrop fixed inset-0 z-50 flex items-start justify-center bg-slate-950/60 p-4 pt-6 md:pt-10" role="dialog" aria-modal="true" aria-label="Drum Machine">
+          <div className="drum-modal-panel max-h-[95vh] w-full max-w-6xl overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl md:p-6">
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <div>
+                <p className="label-section">{drumModalMode === "play" ? "Reprodução" : "Edição"}</p>
+                <h3 className="mt-1 text-2xl font-black text-slate-900">Drum Machine</h3>
+              </div>
+              <button type="button" onClick={() => setDrumModalMode(null)} className="btn-outline px-3 py-2 text-xs">Fechar</button>
+            </div>
+            <DrumMachineEditor
+              initialUrl={chordSheet.drum_machine || ""}
+              onSave={canEditDrumMachine ? saveDrumMachine : undefined}
+              readOnly={drumModalMode === "play" || drumSaving}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ── Controls ── */}
       <div>

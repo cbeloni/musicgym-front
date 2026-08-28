@@ -11,6 +11,7 @@ import ChordSheetFormPage from "./pages/ChordSheetFormPage";
 import RecentlyViewedPage from "./pages/RecentlyViewedPage";
 import SharedChordSheetPage from "./pages/SharedChordSheetPage";
 import SharedSetlistPage from "./pages/SharedSetlistPage";
+import DrumMachinePage from "./pages/DrumMachinePage";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 
 function MainAppContent() {
@@ -40,6 +41,7 @@ function MainAppContent() {
               <Link className="btn-ghost" to="/">Home</Link>
               <Link className="btn-ghost" to="/setlists">Setlists</Link>
               <Link className="btn-ghost" to="/cifras">Cifras</Link>
+              <Link className="btn-ghost" to="/drum-machine">Drum Machine</Link>
               {isAuthenticated && (
                 <Link className="btn-ghost" to="/recentes">Recentes</Link>
               )}
@@ -86,6 +88,7 @@ function MainAppContent() {
               <Link to="/" className="btn-ghost justify-start" onClick={closeMobileMenu}>Home</Link>
               <Link to="/setlists" className="btn-ghost justify-start" onClick={closeMobileMenu}>Setlists</Link>
               <Link to="/cifras" className="btn-ghost justify-start" onClick={closeMobileMenu}>Cifras</Link>
+              <Link to="/drum-machine" className="btn-ghost justify-start" onClick={closeMobileMenu}>Drum Machine</Link>
               {isAuthenticated && (
                 <Link to="/recentes" className="btn-ghost justify-start" onClick={closeMobileMenu}>Recentes</Link>
               )}
@@ -121,6 +124,7 @@ function MainAppContent() {
           <Route path="/cifras/nova" element={<ChordSheetFormPage />} />
           <Route path="/cifras/:id" element={<ChordSheetPage />} />
           <Route path="/cifras/:id/editar" element={<ChordSheetFormPage />} />
+          <Route path="/drum-machine" element={<DrumMachinePage />} />
           <Route path="/recentes" element={<RecentlyViewedPage />} />
           <Route path="/c/:shareToken" element={<SharedChordSheetPage />} />
           <Route path="/s/:shareToken" element={<SharedSetlistPage />} />

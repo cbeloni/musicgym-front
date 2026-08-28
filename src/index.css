@@ -77,3 +77,153 @@ body.hide-bars-active #autoscroll-panel {
   pointer-events: none;
 }
 
+@layer components {
+  .drum-machine-page {
+    @apply mx-auto max-w-6xl py-2 md:py-8;
+  }
+
+  .drum-machine-heading {
+    @apply mb-8 flex items-end justify-between gap-6;
+  }
+
+  .drum-machine-heading h2 {
+    @apply mt-2 text-4xl font-black tracking-tight text-slate-900 md:text-5xl;
+  }
+
+  .drum-machine-subtitle {
+    @apply mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base;
+  }
+
+  .drum-back-link {
+    @apply hidden shrink-0 md:inline-flex;
+  }
+
+  .drum-toolbar {
+    @apply mb-5 flex flex-wrap items-center gap-3 rounded-2xl p-3 md:p-4;
+  }
+
+  .drum-play-button {
+    @apply flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-sm text-white shadow-md transition hover:bg-blue-700 active:scale-95;
+  }
+
+  .tempo-control {
+    @apply flex h-12 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold uppercase tracking-wider text-slate-500;
+  }
+
+  .tempo-control input {
+    @apply w-12 bg-transparent text-center text-base font-bold text-slate-900 outline-none;
+  }
+
+  .drum-tool-button {
+    @apply h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700;
+  }
+
+  .drum-share-hint {
+    @apply ml-auto text-xs text-slate-400;
+  }
+
+  .drum-grid {
+    @apply overflow-x-auto rounded-2xl bg-slate-50/80 p-3 md:p-6;
+    display: grid;
+    grid-template-columns: minmax(150px, 1.1fr) repeat(16, minmax(30px, 1fr));
+    gap: 6px;
+    min-width: 850px;
+  }
+
+  .drum-grid-corner {
+    @apply flex items-end px-3 pb-2 text-xs font-bold uppercase tracking-wider text-slate-400;
+  }
+
+  .drum-step-number {
+    @apply flex h-7 items-center justify-center text-xs font-semibold text-slate-300;
+  }
+
+  .drum-step-number.beat-mark {
+    @apply text-slate-500;
+  }
+
+  .drum-row {
+    display: contents;
+  }
+
+  .drum-instrument-label {
+    @apply flex min-h-12 items-center justify-end px-3 text-sm font-semibold text-slate-700;
+  }
+
+  .drum-cell {
+    @apply min-h-12 rounded-lg border border-slate-200 bg-white shadow-sm transition hover:border-blue-300 hover:bg-blue-50;
+  }
+
+  .drum-cell.is-active {
+    @apply border-transparent shadow-inner;
+  }
+
+  .drum-cell.is-active.emerald {
+    @apply bg-emerald-500 hover:bg-emerald-600;
+  }
+
+  .drum-cell.is-active.amber {
+    @apply bg-amber-400 hover:bg-amber-500;
+  }
+
+  .drum-cell.is-current {
+    @apply ring-2 ring-blue-400 ring-offset-1;
+  }
+
+  .drum-machine-footnote {
+    @apply mt-4 text-center text-xs text-slate-400;
+  }
+
+  .drum-player {
+    @apply mt-3 flex flex-wrap items-center gap-3 rounded-xl p-3;
+  }
+
+  .drum-player-info {
+    @apply flex min-w-24 flex-col gap-1;
+  }
+
+  .drum-player-info strong {
+    @apply text-sm text-slate-800;
+  }
+
+  .drum-player-steps {
+    @apply flex flex-1 items-center gap-1;
+  }
+
+  .drum-player-steps span {
+    @apply h-2 flex-1 rounded-full bg-slate-200 transition-colors;
+  }
+
+  .drum-player-steps span.is-current {
+    @apply bg-blue-600;
+  }
+
+  .drum-player-button {
+    @apply shrink-0 px-3 py-2 text-xs;
+  }
+
+  .drum-machine-actions {
+    @apply flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50/70 p-1;
+  }
+
+  .drum-machine-actions-label {
+    @apply hidden px-2 text-[10px] font-bold uppercase tracking-wider text-blue-700 sm:inline;
+  }
+
+  .drum-machine-actions-buttons {
+    @apply flex items-center gap-1;
+  }
+
+  .drum-machine-actions-buttons .btn-outline {
+    @apply border-transparent bg-white py-1.5 shadow-sm hover:border-blue-200 hover:bg-blue-100;
+  }
+
+  .drum-modal-panel {
+    animation: drum-modal-enter 180ms ease-out;
+  }
+
+  @keyframes drum-modal-enter {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
