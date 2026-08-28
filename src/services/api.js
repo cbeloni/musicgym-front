@@ -309,6 +309,27 @@ export async function updateChordSheetDrumMachine(id, drumMachine) {
   return data;
 }
 
+export async function fetchDrumMachineRhythms() {
+  const { data } = await api.get("/drum-machine/rhythms");
+  return data;
+}
+
+export async function createDrumMachineRhythm(name, drumMachine) {
+  const { data } = await api.post("/drum-machine/rhythms", {
+    name,
+    drum_machine: drumMachine
+  });
+  return data;
+}
+
+export async function updateDrumMachineRhythm(id, name, drumMachine) {
+  const { data } = await api.put(`/drum-machine/rhythms/${id}`, {
+    name,
+    drum_machine: drumMachine
+  });
+  return data;
+}
+
 export async function deleteChordSheet(id) {
   await api.delete(`/chord-sheets/${id}`);
 }

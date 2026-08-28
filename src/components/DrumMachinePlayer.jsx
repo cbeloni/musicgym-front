@@ -33,7 +33,7 @@ function playSample(context, buffer) {
   source.start();
 }
 
-export default function DrumMachinePlayer({ drumMachineUrl, playRequest = 0, stopRequest = 0 }) {
+export default function DrumMachinePlayer({ drumMachineUrl, playRequest = 0, stopRequest = 0, onPlayingChange }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentStep, setCurrentStep] = useState(-1);
   const { bpm, pattern } = decodeDrumData(new URL(drumMachineUrl).searchParams.get("data"));
@@ -62,6 +62,7 @@ export default function DrumMachinePlayer({ drumMachineUrl, playRequest = 0, sto
   const stop = () => {
     clearInterval(timer.current);
     setIsPlaying(false);
+    onPlayingChange?.(false);
     setCurrentStep(-1);
   };
 
@@ -81,6 +82,7 @@ export default function DrumMachinePlayer({ drumMachineUrl, playRequest = 0, sto
     tick();
     timer.current = setInterval(tick, (60 / bpm / 4) * 1000);
     setIsPlaying(true);
+    onPlayingChange?.(true);
   };
 
   useEffect(() => {

@@ -174,6 +174,14 @@ body.hide-bars-active #autoscroll-panel {
     @apply mt-4 text-center text-xs text-slate-400;
   }
 
+  .drum-library-input {
+    @apply h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500;
+  }
+
+  .drum-toolbar-select {
+    @apply h-12 max-w-44 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500;
+  }
+
   .drum-player {
     @apply mt-3 flex flex-wrap items-center gap-3 rounded-xl p-3;
   }

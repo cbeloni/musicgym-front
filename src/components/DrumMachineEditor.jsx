@@ -64,7 +64,7 @@ function sampleSound(context, buffer) {
   source.start();
 }
 
-export default function DrumMachineEditor({ initialUrl = "", syncUrl = false, onSave, readOnly = false }) {
+export default function DrumMachineEditor({ initialUrl = "", syncUrl = false, onSave, saveLabel = "Salvar Ritmo", toolbarExtra, readOnly = false }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const sourceData = syncUrl ? searchParams.get("data") : dataFromUrl(initialUrl);
   const initial = useMemo(() => decodeDrumData(sourceData), [sourceData]);
@@ -152,7 +152,8 @@ export default function DrumMachineEditor({ initialUrl = "", syncUrl = false, on
       <button type="button" className="drum-tool-button" disabled={readOnly} onClick={() => updateBpm(DEFAULT_BPM)}>Tempo padrão</button>
       <button type="button" className="drum-tool-button" disabled={readOnly} onClick={() => { setPattern(emptyPattern()); setSaved(false); }}>Limpar</button>
       <button type="button" className="drum-tool-button" onClick={copyLink}>{copied ? "Link copiado" : "Compartilhar link"}</button>
-      {onSave && !readOnly && <button type="button" className="btn-primary drum-save-button" onClick={save}>{saved ? "Batida salva" : "Salvar batida"}</button>}
+      {onSave && !readOnly && <button type="button" className="btn-primary drum-save-button" onClick={save}>{saved ? "Ritmo salvo" : saveLabel}</button>}
+      {toolbarExtra}
     </div>
     <div className="drum-grid panel" role="grid" aria-label="Grade da bateria">
       <div className="drum-grid-corner">Instrumentos</div>

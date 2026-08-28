@@ -18,6 +18,7 @@ import {
   unshareChordSheet,
   updateChordSheetScrollSpeed,
   updateChordSheetDrumMachine,
+  fetchDrumMachineRhythms,
 } from "../services/api";
 import { useAuth } from "../components/AuthContext";
 
@@ -43,6 +44,10 @@ export default function ChordSheetPage() {
   const [drumSaving, setDrumSaving] = useState(false);
   const [drumPlayRequest, setDrumPlayRequest] = useState(0);
   const [drumStopRequest, setDrumStopRequest] = useState(0);
+  const [drumIsPlaying, setDrumIsPlaying] = useState(false);
+  const [savedRhythms, setSavedRhythms] = useState([]);
+  const [modalRhythmUrl, setModalRhythmUrl] = useState("");
+  const [selectedModalRhythmId, setSelectedModalRhythmId] = useState("");
   const saveTimeoutRef = useRef(null);
   const lastScheduledSpeedRef = useRef(1);
 
@@ -58,6 +63,7 @@ export default function ChordSheetPage() {
     fetchChordSheet(id)
       .then((data) => {
         setChordSheet(data);
+        setModalRhythmUrl(data.drum_machine || "");
         const normalized = Number(
           Math.min(1.8, Math.max(0.2, Number(data?.scroll_speed ?? 1))).toFixed(1)
         );
@@ -88,6 +94,14 @@ export default function ChordSheetPage() {
       })
       .finally(() => setLoading(false));
   }, [id, isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setSavedRhythms([]);
+      return;
+    }
+    fetchDrumMachineRhythms().then(setSavedRhythms).catch(() => setSavedRhythms([]));
+  }, [isAuthenticated]);
 
   // Persiste a preferência de tablatura no Redis quando o usuário alterna
   const toggleTab = useCallback(() => {
@@ -240,7 +254,7 @@ export default function ChordSheetPage() {
                 </button>
               )}
               {!chordSheet.drum_machine && canEditDrumMachine && (
-                <button type="button" onClick={() => setDrumModalMode("new")} className="btn-outline text-xs px-4 py-2">
+                <button type="button" onClick={() => { setModalRhythmUrl(""); setSelectedModalRhythmId(""); setDrumModalMode("new"); }} className="btn-outline text-xs px-4 py-2">
                   🥁 Drum Machine
                 </button>
               )}
@@ -248,11 +262,11 @@ export default function ChordSheetPage() {
                 <div className="drum-machine-actions">
                   <span className="drum-machine-actions-label">🥁 Drum Machine</span>
                   <div className="drum-machine-actions-buttons">
-                    <button type="button" onClick={() => setDrumPlayRequest((value) => value + 1)} className="btn-outline text-xs px-4 py-2">
-                      ▶ Tocar
+                <button type="button" onClick={() => drumIsPlaying ? setDrumStopRequest((value) => value + 1) : setDrumPlayRequest((value) => value + 1)} className="btn-outline text-xs px-4 py-2">
+                      {drumIsPlaying ? "■ Parar" : "▶ Tocar"}
                     </button>
                     {canEditDrumMachine && (
-                      <button type="button" onClick={() => { setDrumStopRequest((value) => value + 1); setDrumModalMode("edit"); }} className="btn-outline text-xs px-4 py-2">
+                      <button type="button" onClick={() => { setModalRhythmUrl(chordSheet.drum_machine); setSelectedModalRhythmId(""); setDrumStopRequest((value) => value + 1); setDrumModalMode("edit"); }} className="btn-outline text-xs px-4 py-2">
                         ✏️ Editar
                       </button>
                     )}
@@ -264,7 +278,7 @@ export default function ChordSheetPage() {
           {/* YouTube Player no lugar do antigo botão "Editar Cifra" */}
           <div className="w-full sm:w-80 lg:w-96 shrink-0">
             <YouTubePlayer url={chordSheet.youtube_url} />
-            {chordSheet.drum_machine && <DrumMachinePlayer drumMachineUrl={chordSheet.drum_machine} playRequest={drumPlayRequest} stopRequest={drumStopRequest} />}
+            {chordSheet.drum_machine && <DrumMachinePlayer drumMachineUrl={chordSheet.drum_machine} playRequest={drumPlayRequest} stopRequest={drumStopRequest} onPlayingChange={setDrumIsPlaying} />}
           </div>
         </div>
 
@@ -306,8 +320,17 @@ export default function ChordSheetPage() {
               <button type="button" onClick={() => setDrumModalMode(null)} className="btn-outline px-3 py-2 text-xs">Fechar</button>
             </div>
             <DrumMachineEditor
-              initialUrl={chordSheet.drum_machine || ""}
+              initialUrl={modalRhythmUrl}
               onSave={canEditDrumMachine ? saveDrumMachine : undefined}
+              saveLabel="Salvar na cifra"
+              toolbarExtra={isAuthenticated && <select className="drum-toolbar-select" value={selectedModalRhythmId} onChange={(event) => {
+                const rhythm = savedRhythms.find((item) => String(item.id) === String(event.target.value));
+                setSelectedModalRhythmId(event.target.value);
+                if (rhythm) setModalRhythmUrl(rhythm.drum_machine);
+              }} aria-label="Ritmos salvos">
+                <option value="">Ritmos salvos</option>
+                {savedRhythms.map((rhythm) => <option key={rhythm.id} value={rhythm.id}>{rhythm.name}</option>)}
+              </select>}
               readOnly={drumModalMode === "play" || drumSaving}
             />
           </div>
