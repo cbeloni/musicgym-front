@@ -1,4 +1,4 @@
-# Setlist Club Frontend
+# MusicGym Frontend
 
 Frontend React (Vite) + Tailwind CSS para visualização de cifras e setlists.
 
@@ -8,7 +8,7 @@ Frontend React (Vite) + Tailwind CSS para visualização de cifras e setlists.
 
 - **Node.js 18+** instalado (recomendado: [Node.js LTS](https://nodejs.org))
 - **npm** disponível no PATH
-- **MySQL e Redis rodando via Docker** (veja [`setlistclub-api/README.md`](../setlistclub-api/README.md))
+- **MySQL e Redis rodando via Docker** (veja [`musicgym-api/README.md`](../musicgym-api/README.md))
 
 ---
 
@@ -20,7 +20,7 @@ Frontend React (Vite) + Tailwind CSS para visualização de cifras e setlists.
 
 ### Terminal 1 — Infraestrutura (MySQL + Redis)
 
-Execute a partir da **raiz do monorepo** (`/setlistclub`):
+Execute a partir da **raiz do monorepo** (`/musicgym`):
 
 ```bash
 docker compose up -d mysql redis
@@ -31,10 +31,10 @@ docker compose up -d mysql redis
 ### Terminal 2 — Backend (API FastAPI)
 
 ```bash
-cd /Users/cauebeloni/Documents/setlistclub/setlistclub-api
+cd /Users/cauebeloni/Documents/musicgym/musicgym-api
 pyenv local 3.11.9
 python -m venv venv
-source venv/bin/activate
+python -m venv venv
 pip install -r requirements.txt
 python -m uvicorn app.main:app --reload
 ```
@@ -46,7 +46,7 @@ API disponível em: **http://localhost:8000**
 ### Terminal 3 — Frontend (React + Vite)
 
 ```bash
-cd /Users/cauebeloni/Documents/setlistclub/setlistclub-front
+cd /Users/cauebeloni/Documents/musicgym/musicgym-front
 npm install
 npm run dev
 ```
@@ -57,7 +57,7 @@ Frontend disponível em: **http://localhost:3000**
 
 ## Configuração de variável de ambiente
 
-Crie um arquivo `.env` em `setlistclub-front/` (opcional — já há valor padrão):
+Crie um arquivo `.env` em `musicgym-front/` (opcional — já há valor padrão):
 
 ```env
 VITE_API_URL=http://localhost:8000/api/v1
@@ -80,7 +80,7 @@ VITE_API_URL=http://localhost:8000/api/v1
 ## Estrutura do projeto
 
 ```
-setlistclub-front/
+musicgym-front/
 ├── src/
 │   ├── components/
 │   │   ├── AutoScrollControls.jsx  # Controle de rolagem automática na cifra

@@ -38,7 +38,7 @@ export default function HomePage({ mode = "home" }) {
       const data = await fetchMainSetlists();
       setSetlists(data);
     } catch {
-      setError("Não foi possível conectar à API do Setlist Club. Verifique o servidor.");
+      setError("Não foi possível conectar à API do MusicGym. Verifique o servidor.");
     } finally {
       setLoading(false);
     }

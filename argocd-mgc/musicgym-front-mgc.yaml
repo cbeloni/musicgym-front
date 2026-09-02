@@ -2,21 +2,21 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: setlistclub-front
-  name: setlistclub-front
+    app: musicgym-front
+  name: musicgym-front
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: setlistclub-front
+      app: musicgym-front
   template:
     metadata:
       labels:
-        app: setlistclub-front
+        app: musicgym-front
     spec:
       containers:
-        - image: cbeloni/setlistclub-front:arm64
-          name: setlistclub-front
+        - image: cbeloni/musicgym-front:amd64
+          name: musicgym-front
           imagePullPolicy: Always
           ports:
             - containerPort: 3000

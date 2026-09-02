@@ -27,12 +27,12 @@ function MainAppContent() {
           <Link to="/" className="flex items-center gap-3 group" onClick={closeMobileMenu}>
             <img
               src="/logo.png"
-              alt="Setlist Club"
+              alt="MusicGym"
               className="h-9 w-auto transition-transform duration-200 group-hover:scale-105"
             />
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">Gestão de Repertório</p>
-              <h1 className="text-lg font-black text-slate-900 leading-none">Setlist Club</h1>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">Academia Musical</p>
+              <h1 className="text-lg font-black text-slate-900 leading-none">MusicGym</h1>
             </div>
           </Link>
 
@@ -137,7 +137,7 @@ function MainAppContent() {
       </main>
 
       <footer className="border-t border-slate-200 py-6 text-center text-xs text-slate-500">
-        © {new Date().getFullYear()} Setlist Club — Gestão de repertório para músicos
+        © {new Date().getFullYear()} MusicGym — Academia Musical para músicos
       </footer>
     </div>
   );

@@ -42,7 +42,7 @@ export default function RegisterPage() {
             Criar conta grátis
           </h2>
           <p className="text-xs text-slate-500 mt-1.5 font-medium uppercase tracking-wider">
-            Faça parte do Setlist Club
+            Faça parte do MusicGym
           </p>
         </header>
 

@@ -39,7 +39,7 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          tags: cbeloni/setlistclub-front:amd64
+          tags: cbeloni/musicgym-front:amd64
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
@@ -55,8 +55,8 @@ jobs:
 
       - name: Apply Kubernetes manifests
         run: |
-          kubectl apply -f argocd-mgc/setlistclub-front-mgc.yaml --insecure-skip-tls-verify
-          kubectl rollout restart deployment/setlistclub-front --insecure-skip-tls-verify
+          kubectl apply -f argocd-mgc/musicgym-front-mgc.yaml --insecure-skip-tls-verify
+          kubectl rollout restart deployment/musicgym-front --insecure-skip-tls-verify
 
       - name: Purge cache
         uses: jakejarvis/cloudflare-purge-action@master
