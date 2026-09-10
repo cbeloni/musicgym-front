@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import DrumMachineEditor from "../components/DrumMachineEditor";
 import { useAuth } from "../components/AuthContext";
@@ -12,6 +12,9 @@ export default function DrumMachinePage() {
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [pendingUrl, setPendingUrl] = useState("");
   const [rhythmName, setRhythmName] = useState("");
+  const [rhythmSearch, setRhythmSearch] = useState("");
+  const [rhythmMenuOpen, setRhythmMenuOpen] = useState(false);
+  const rhythmPickerRef = useRef(null);
 
   useEffect(() => {
     if (!isAuthenticated) { setSavedRhythms([]); return; }
@@ -27,6 +30,19 @@ export default function DrumMachinePage() {
 
   const selectedRhythm = savedRhythms.find((rhythm) => String(rhythm.id) === String(selectedRhythmId));
   const rhythmWithName = savedRhythms.find((rhythm) => rhythm.name.trim().toLowerCase() === rhythmName.trim().toLowerCase());
+  const filteredRhythms = useMemo(() => {
+    const search = rhythmSearch.trim().toLocaleLowerCase();
+    if (!search) return savedRhythms;
+    return savedRhythms.filter((rhythm) => rhythm.name.toLocaleLowerCase().includes(search));
+  }, [rhythmSearch, savedRhythms]);
+
+  useEffect(() => {
+    const closeRhythmMenu = (event) => {
+      if (!rhythmPickerRef.current?.contains(event.target)) setRhythmMenuOpen(false);
+    };
+    document.addEventListener("mousedown", closeRhythmMenu);
+    return () => document.removeEventListener("mousedown", closeRhythmMenu);
+  }, []);
 
   const persistRhythm = async () => {
     const name = rhythmName.trim() || `Ritmo ${savedRhythms.length + 1}`;
@@ -44,9 +60,9 @@ export default function DrumMachinePage() {
     }
   };
 
-  const loadRhythm = (event) => {
-    const rhythm = savedRhythms.find((item) => String(item.id) === String(event.target.value));
-    setSelectedRhythmId(event.target.value);
+  const loadRhythm = (rhythm) => {
+    setSelectedRhythmId(String(rhythm.id));
+    setRhythmMenuOpen(false);
     if (!rhythm) return;
     const data = new URL(rhythm.drum_machine, window.location.origin).searchParams.get("data");
     if (data) setSearchParams({ data });
@@ -60,7 +76,26 @@ export default function DrumMachinePage() {
     <DrumMachineEditor
       syncUrl
       onSave={isAuthenticated ? requestSaveRhythm : undefined}
-      toolbarExtra={<select id="saved-rhythms" className="drum-toolbar-select" value={selectedRhythmId} onChange={loadRhythm} aria-label="Ritmos salvos"><option value="">Ritmos salvos</option>{savedRhythms.map((rhythm) => <option key={rhythm.id} value={rhythm.id}>{rhythm.name}</option>)}</select>}
+      toolbarExtra={<div className="drum-rhythm-picker" ref={rhythmPickerRef}>
+        <button type="button" className="drum-rhythm-trigger" onClick={() => setRhythmMenuOpen((open) => !open)} aria-haspopup="listbox" aria-expanded={rhythmMenuOpen} aria-label="Selecionar ritmo salvo">
+          <span>{selectedRhythm?.name || "Ritmos salvos"}</span><span aria-hidden="true">⌄</span>
+        </button>
+        {rhythmMenuOpen && <div className="drum-rhythm-menu" role="dialog" aria-label="Pesquisar ritmos salvos">
+          <input
+            autoFocus
+            className="drum-library-input drum-rhythm-search"
+            value={rhythmSearch}
+            onChange={(event) => setRhythmSearch(event.target.value)}
+            placeholder="Pesquisar ritmos"
+            aria-label="Pesquisar ritmos salvos"
+          />
+          <div className="drum-rhythm-options" role="listbox" aria-label="Ritmos salvos">
+            {filteredRhythms.length > 0
+              ? filteredRhythms.map((rhythm) => <button type="button" role="option" aria-selected={String(rhythm.id) === String(selectedRhythmId)} className="drum-rhythm-option" key={rhythm.id} onClick={() => loadRhythm(rhythm)}>{rhythm.name}</button>)
+              : <p className="drum-rhythm-empty">Nenhum ritmo encontrado</p>}
+          </div>
+        </div>}
+      </div>}
     />
     {saveModalOpen && <div className="drum-modal-backdrop fixed inset-0 z-50 flex items-start justify-center bg-slate-950/60 p-4 pt-6 md:pt-10" role="dialog" aria-modal="true" aria-label="Salvar ritmo">
       <div className="drum-modal-panel w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">

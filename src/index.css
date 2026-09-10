@@ -99,7 +99,7 @@ body.hide-bars-active #autoscroll-panel {
   }
 
   .drum-toolbar {
-    @apply mb-5 flex flex-wrap items-center gap-3 rounded-2xl p-3 md:p-4;
+    @apply relative z-30 mb-5 flex flex-wrap items-center gap-3 rounded-2xl p-3 md:p-4;
   }
 
   .drum-play-button {
@@ -180,6 +180,38 @@ body.hide-bars-active #autoscroll-panel {
 
   .drum-toolbar-select {
     @apply h-12 max-w-44 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500;
+  }
+
+  .drum-rhythm-picker {
+    @apply relative z-40 w-52;
+  }
+
+  .drum-rhythm-trigger {
+    @apply flex h-12 w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 text-left text-sm font-semibold text-slate-700 outline-none transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500;
+  }
+
+  .drum-rhythm-menu {
+    @apply absolute right-0 top-full z-20 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-xl;
+  }
+
+  .drum-rhythm-search {
+    @apply h-10 w-full;
+  }
+
+  .drum-rhythm-options {
+    @apply mt-2 max-h-56 overflow-y-auto;
+  }
+
+  .drum-rhythm-option {
+    @apply block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-blue-50 hover:text-blue-700;
+  }
+
+  .drum-rhythm-option[aria-selected="true"] {
+    @apply bg-blue-50 font-semibold text-blue-700;
+  }
+
+  .drum-rhythm-empty {
+    @apply px-3 py-2 text-sm text-slate-400;
   }
 
   .drum-player {
@@ -284,6 +316,21 @@ body.hide-bars-active #autoscroll-panel {
     max-width: 100%;
     flex: 1 1 9rem;
     font-size: 0.7rem;
+  }
+
+  .drum-rhythm-picker {
+    width: 100%;
+  }
+
+  .drum-rhythm-trigger {
+    height: 2.75rem;
+    font-size: 0.7rem;
+  }
+
+  .drum-rhythm-menu {
+    left: 0;
+    right: 0;
+    width: 100%;
   }
 
   .drum-grid {
