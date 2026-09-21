@@ -1,4 +1,4 @@
-// Parâmetro de aquecimento do Virtual Piano (deep link `?aquecimento=`).
+// Parser da sequência de notas do Virtual Piano (deep link `?sequencia=`).
 //
 // Formato:
 //   [bpm=96;][compasso=4/4;]C4:1/4;D4:1/8;E4:1/2

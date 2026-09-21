@@ -19,17 +19,17 @@ export default function WarmupSequencePanel({
   onToggleLoop,
   onTogglePlay,
   onSave,
-  saveLabel = "Salvar aquecimento",
+  saveLabel = "Salvar sequência",
 }) {
   const { notes, bpm, timeSignature, invalid } = warmup;
   const hasNotes = notes.length > 0;
   const summary = describeWarmup(warmup);
 
   return (
-    <section className="warmup-panel" aria-label="Sequência de aquecimento">
+    <section className="warmup-panel" aria-label="Sequência de notas">
       <div className="warmup-head">
         <div className="warmup-info">
-          <span className="label-section">Sequência de aquecimento</span>
+          <span className="label-section">Sequência de notas</span>
           <strong>{hasNotes ? summary.label : "nenhuma nota no parâmetro"}</strong>
         </div>
 
@@ -105,10 +105,10 @@ export default function WarmupSequencePanel({
         </ol>
       ) : (
         <p className="warmup-empty">
-          Informe as notas no parâmetro <code>aquecimento</code> da URL, separando cada nota por
+          Informe as notas no parâmetro <code>sequencia</code> da URL, separando cada nota por
           <code>;</code> ou <code>,</code> e usando as figuras padrão da música (1, 1/2, 1/4, 1/8,
           1/16 e 1/32, com <code>.</code> para pontuada). Exemplo:{" "}
-          <code>?aquecimento=bpm=96;C4:1/4;D4:1/8;E4:1/2</code> — o <code>-</code> toca uma pausa.
+          <code>?sequencia=bpm=96;C4:1/4;D4:1/8;E4:1/2</code> — o <code>-</code> toca uma pausa.
         </p>
       )}
 

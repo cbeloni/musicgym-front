@@ -330,29 +330,29 @@ export async function updateDrumMachineRhythm(id, name, drumMachine) {
   return data;
 }
 
-export async function fetchPianoWarmups() {
-  const { data } = await api.get("/piano/warmups");
+export async function fetchPianoSequences() {
+  const { data } = await api.get("/piano/sequences");
   return data;
 }
 
-export async function createPianoWarmup(name, sequence) {
-  const { data } = await api.post("/piano/warmups", {
+export async function createPianoSequence(name, sequence) {
+  const { data } = await api.post("/piano/sequences", {
     name,
     sequence
   });
   return data;
 }
 
-export async function updatePianoWarmup(id, name, sequence) {
-  const { data } = await api.put(`/piano/warmups/${id}`, {
+export async function updatePianoSequence(id, name, sequence) {
+  const { data } = await api.put(`/piano/sequences/${id}`, {
     name,
     sequence
   });
   return data;
 }
 
-export async function deletePianoWarmup(id) {
-  await api.delete(`/piano/warmups/${id}`);
+export async function deletePianoSequence(id) {
+  await api.delete(`/piano/sequences/${id}`);
 }
 
 export async function deleteChordSheet(id) {

@@ -1,4 +1,4 @@
-// Detecção de frequência fundamental para o modo "Aquecimento" do Virtual Piano.
+// Detecção de frequência fundamental para o modo "Ouvir Notas" do Virtual Piano.
 //
 // Usa o método YIN (diferença normalizada acumulada) sobre a janela de amostras
 // capturada pelo microfone, com interpolação parabólica no vale encontrado.

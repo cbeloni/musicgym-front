@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import VirtualPiano from "../components/VirtualPiano";
 import { useAuth } from "../components/AuthContext";
-import { createPianoWarmup, deletePianoWarmup, fetchPianoWarmups, updatePianoWarmup } from "../services/api";
+import { createPianoSequence, deletePianoSequence, fetchPianoSequences, updatePianoSequence } from "../services/api";
 
 export default function VirtualPianoPage() {
   const [, setSearchParams] = useSearchParams();
@@ -21,7 +21,7 @@ export default function VirtualPianoPage() {
       setSavedWarmups([]);
       return;
     }
-    fetchPianoWarmups()
+    fetchPianoSequences()
       .then(setSavedWarmups)
       .catch(() => setSavedWarmups([]));
   }, [isAuthenticated]);
@@ -51,11 +51,11 @@ export default function VirtualPianoPage() {
   };
 
   const persistWarmup = async () => {
-    const name = warmupName.trim() || `Aquecimento ${savedWarmups.length + 1}`;
+    const name = warmupName.trim() || `Sequência ${savedWarmups.length + 1}`;
     try {
       const warmup = warmupWithName
-        ? await updatePianoWarmup(warmupWithName.id, name, pendingSequence)
-        : await createPianoWarmup(name, pendingSequence);
+        ? await updatePianoSequence(warmupWithName.id, name, pendingSequence)
+        : await createPianoSequence(name, pendingSequence);
       setSavedWarmups((current) =>
         warmupWithName
           ? current.map((item) => (item.id === warmup.id ? warmup : item))
@@ -66,7 +66,7 @@ export default function VirtualPianoPage() {
       setPendingSequence("");
       setSaveModalOpen(false);
     } catch {
-      window.alert("Não foi possível salvar o aquecimento. Verifique se você está autenticado.");
+      window.alert("Não foi possível salvar a sequência. Verifique se você está autenticado.");
     }
   };
 
@@ -74,17 +74,17 @@ export default function VirtualPianoPage() {
     setSelectedWarmupId(String(warmup.id));
     setWarmupMenuOpen(false);
     if (!warmup) return;
-    setSearchParams({ aquecimento: warmup.sequence });
+    setSearchParams({ sequencia: warmup.sequence });
   };
 
   const removeWarmup = async (warmup) => {
-    if (!window.confirm(`Remover o aquecimento “${warmup.name}”?`)) return;
+    if (!window.confirm(`Remover a sequência “${warmup.name}”?`)) return;
     try {
-      await deletePianoWarmup(warmup.id);
+      await deletePianoSequence(warmup.id);
       setSavedWarmups((current) => current.filter((item) => item.id !== warmup.id));
       if (String(warmup.id) === String(selectedWarmupId)) setSelectedWarmupId("");
     } catch {
-      window.alert("Não foi possível remover o aquecimento. Verifique se você está autenticado.");
+      window.alert("Não foi possível remover a sequência. Verifique se você está autenticado.");
     }
   };
 
@@ -114,22 +114,22 @@ export default function VirtualPianoPage() {
               onClick={() => setWarmupMenuOpen((open) => !open)}
               aria-haspopup="listbox"
               aria-expanded={warmupMenuOpen}
-              aria-label="Selecionar aquecimento salvo"
+              aria-label="Selecionar sequência salva"
             >
-              <span className="min-w-0 truncate">{selectedWarmup?.name || "Aquecimentos salvos"}</span>
+              <span className="min-w-0 truncate">{selectedWarmup?.name || "Sequências salvas"}</span>
               <span aria-hidden="true">⌄</span>
             </button>
             {warmupMenuOpen && (
-              <div className="drum-rhythm-menu" role="dialog" aria-label="Pesquisar aquecimentos salvos">
+              <div className="drum-rhythm-menu" role="dialog" aria-label="Pesquisar sequências salvas">
                 <input
                   autoFocus
                   className="drum-library-input drum-rhythm-search"
                   value={warmupSearch}
                   onChange={(event) => setWarmupSearch(event.target.value)}
-                  placeholder="Pesquisar aquecimentos"
-                  aria-label="Pesquisar aquecimentos salvos"
+                  placeholder="Pesquisar sequências"
+                  aria-label="Pesquisar sequências salvas"
                 />
-                <div className="drum-rhythm-options" role="listbox" aria-label="Aquecimentos salvos">
+                <div className="drum-rhythm-options" role="listbox" aria-label="Sequências salvas">
                   {filteredWarmups.length > 0 ? (
                     filteredWarmups.map((warmup) => (
                       <div className="warmup-option-row" role="presentation" key={warmup.id}>
@@ -147,8 +147,8 @@ export default function VirtualPianoPage() {
                           type="button"
                           className="warmup-option-delete"
                           onClick={() => removeWarmup(warmup)}
-                          aria-label={`Remover o aquecimento ${warmup.name}`}
-                          title="Remover aquecimento"
+                          aria-label={`Remover a sequência ${warmup.name}`}
+                          title="Remover sequência"
                         >
                           ✕
                         </button>
@@ -157,8 +157,8 @@ export default function VirtualPianoPage() {
                   ) : (
                     <p className="drum-rhythm-empty">
                       {isAuthenticated
-                        ? "Nenhum aquecimento salvo"
-                        : "Entre na sua conta para salvar aquecimentos"}
+                        ? "Nenhuma sequência salva"
+                        : "Entre na sua conta para salvar sequências"}
                     </p>
                   )}
                 </div>
@@ -178,11 +178,11 @@ export default function VirtualPianoPage() {
           className="drum-modal-backdrop fixed inset-0 z-50 flex items-start justify-center bg-slate-950/60 p-4 pt-6 md:pt-10"
           role="dialog"
           aria-modal="true"
-          aria-label="Salvar aquecimento"
+          aria-label="Salvar sequência"
         >
           <div className="drum-modal-panel w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
             <p className="label-section">Virtual Piano</p>
-            <h3 className="mt-1 text-2xl font-black text-slate-900">Salvar aquecimento</h3>
+            <h3 className="mt-1 text-2xl font-black text-slate-900">Salvar sequência</h3>
             <p className="mt-2 break-words rounded-lg bg-slate-50 px-3 py-2 font-mono text-xs text-slate-600">
               {pendingSequence}
             </p>
@@ -190,7 +190,7 @@ export default function VirtualPianoPage() {
               className="mt-5 block text-xs font-bold uppercase tracking-wider text-slate-500"
               htmlFor="warmup-name"
             >
-              Nome do aquecimento
+              Nome da sequência
             </label>
             <input
               id="warmup-name"
@@ -202,7 +202,7 @@ export default function VirtualPianoPage() {
             />
             {warmupWithName && (
               <p className="mt-2 text-xs font-semibold text-amber-700">
-                O aquecimento com este nome será atualizado e substituído pela sequência atual.
+                Já existe uma sequência com este nome: ela será atualizada com a sequência atual.
               </p>
             )}
             <div className="mt-5 flex flex-wrap justify-end gap-2">

@@ -56,10 +56,10 @@ uma linha curta que é uma aproximação.
 Exemplo de saída para "quero uma batida de rock a 90 bpm":
 https://musicgym.beloni.dev.br/drum-machine?data=90-n-44-a--0000.0000.0000.0000.5555.1010.0101-5q`;
 
-export const VIRTUAL_PIANO_AI_INSTRUCTION = `Você gera URLs de aquecimento do Virtual Piano do MusicGym. Responda APENAS com a URL final, sem explicações e sem markdown.
+export const VIRTUAL_PIANO_AI_INSTRUCTION = `Você gera URLs de sequência de notas do Virtual Piano do MusicGym. Responda APENAS com a URL final, sem explicações e sem markdown.
 
 Formato da URL:
-https://musicgym.beloni.dev.br/virtual-piano?aquecimento=<tokens separados por ;>
+https://musicgym.beloni.dev.br/virtual-piano?sequencia=<tokens separados por ;>
 
 Gramática do valor:
 [bpm=<40 a 220>;] [compasso=<ex.: 4/4>;] <nota>[:<duração>];<nota>[:<duração>];...
@@ -113,9 +113,9 @@ Consistência musical (obrigatório):
 - Para acompanhar melodia com acordes, coloque o acorde no tempo forte (ou a cada 2 tempos) e
   deixe as outras notas como melodia; sustente os acordes com durações de 1/2 ou 1.
 
-Exemplo de saída para "quero um aquecimento com saltos de terças começando por C2 e fazendo uma
+Exemplo de saída para "quero uma sequência com saltos de terças começando por C2 e fazendo uma
 oitava completa":
-https://musicgym.beloni.dev.br/virtual-piano?aquecimento=bpm=90;compasso=4/4;C2:1/4;E2:1/4;D2:1/4;F2:1/4;E2:1/4;G2:1/4;F2:1/4;A2:1/4;G2:1/4;B2:1/4;A2:1/4;C3:1/4;B2:1/4;D3:1/4;C3:1/4;E3:1/4
+https://musicgym.beloni.dev.br/virtual-piano?sequencia=bpm=90;compasso=4/4;C2:1/4;E2:1/4;D2:1/4;F2:1/4;E2:1/4;G2:1/4;F2:1/4;A2:1/4;G2:1/4;B2:1/4;A2:1/4;C3:1/4;B2:1/4;D3:1/4;C3:1/4;E3:1/4
 
 Exemplo de saída para "quero tocar duas notas ao mesmo tempo, com acordes de Dó maior":
-https://musicgym.beloni.dev.br/virtual-piano?aquecimento=bpm=80;compasso=4/4;C4+E4+G4:1/2;F4+A4+C5:1/2;G4+B4+D5:1/2;C4+E4+G4+C5:1`;
+https://musicgym.beloni.dev.br/virtual-piano?sequencia=bpm=80;compasso=4/4;C4+E4+G4:1/2;F4+A4+C5:1/2;G4+B4+D5:1/2;C4+E4+G4+C5:1`;

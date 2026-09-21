@@ -231,7 +231,7 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
     setVoice(null);
   }, [teardownMic]);
 
-  // Aquecimento: liga o microfone, identifica a nota cantada e destaca a tecla.
+  // Ouvir Notas: liga o microfone, identifica a nota cantada e destaca a tecla.
   const startWarmup = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
       setMicError("O microfone exige uma conexão segura (HTTPS) ou localhost.");
@@ -324,7 +324,7 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
     } catch (error) {
       setMicError(
         error?.name === "NotAllowedError"
-          ? "Permissão de microfone negada. Autorize o acesso para usar o aquecimento."
+          ? "Permissão de microfone negada. Autorize o acesso para ouvir as notas."
           : "Não foi possível acessar o microfone."
       );
       stopWarmup();
@@ -340,9 +340,14 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
 
   useEffect(() => () => teardownMic(), [teardownMic]);
 
-  // Sequência de aquecimento recebida pelo parâmetro ?aquecimento= da URL.
+  // Sequência de notas recebida pelo parâmetro ?sequencia= da URL. O nome antigo
+  // (?aquecimento=) continua aceito para não quebrar links já compartilhados.
   const warmupParam =
-    searchParams.get("aquecimento") ?? searchParams.get("warmup") ?? searchParams.get("data") ?? "";
+    searchParams.get("sequencia") ??
+    searchParams.get("aquecimento") ??
+    searchParams.get("warmup") ??
+    searchParams.get("data") ??
+    "";
   const warmup = useMemo(() => parseWarmupParam(warmupParam), [warmupParam]);
 
   useEffect(() => {
@@ -544,9 +549,9 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
   };
 
   const detectedMidi = voice?.inRange ? voice.midi : null;
-  // Com o aquecimento ligado a última tecla tocada fica sempre marcada.
+  // Com o microfone ligado a última tecla tocada fica sempre marcada.
   const lastPlayedKey = listening ? lastPlayedMidi : null;
-  // Notas da sequência de aquecimento em reprodução (um acorde pode ter várias).
+  // Notas da sequência em reprodução (um acorde pode ter várias).
   const currentSequenceNote = isPlayingSequence ? warmup.notes[sequenceIndex] : null;
   const sequenceMidis = useMemo(
     () => new Set(currentSequenceNote && !currentSequenceNote.rest ? currentSequenceNote.midis : []),
@@ -644,10 +649,10 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
               aria-pressed={listening}
               disabled={micBusy}
               onClick={toggleWarmup}
-              aria-label={listening ? "Desligar o aquecimento com microfone" : "Ativar o aquecimento com microfone"}
+              aria-label={listening ? "Desligar a leitura de notas do microfone" : "Ativar a leitura de notas do microfone"}
             >
               <span className="piano-warmup-dot" aria-hidden="true" />
-              Aquecimento
+              Ouvir Notas
             </button>
             <AiInstructionButton className="piano-toggle" instruction={VIRTUAL_PIANO_AI_INSTRUCTION} />
           </div>

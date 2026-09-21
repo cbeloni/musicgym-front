@@ -403,7 +403,7 @@ body.hide-bars-active #autoscroll-panel {
 
 
   /* Última tecla tocada: depois de soltar, fica marcada em azul claro
-     (enquanto o aquecimento está ligado). */
+     (enquanto o microfone está ligado). */
   .piano-key-white.is-last-played {
     @apply border-sky-400 from-sky-100 to-sky-200 text-sky-900;
   }
@@ -416,7 +416,7 @@ body.hide-bars-active #autoscroll-panel {
     @apply border-sky-500 from-sky-500 to-sky-700 text-white;
   }
 
-  /* Nota identificada pelo microfone no modo Aquecimento. */
+  /* Nota identificada pelo microfone no modo Ouvir Notas. */
   .piano-key-white.is-detected {
     @apply border-emerald-500 from-emerald-100 to-emerald-300 text-emerald-900;
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.35), 0 10px 20px -10px rgba(16, 185, 129, 0.9);
@@ -504,7 +504,7 @@ body.hide-bars-active #autoscroll-panel {
     @apply font-mono font-bold text-slate-600;
   }
 
-  /* Sequência de aquecimento (parâmetro ?aquecimento=) */
+  /* Sequência de notas (parâmetro ?sequencia=) */
   .warmup-panel {
     @apply mb-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-3 md:p-4;
   }
@@ -618,7 +618,7 @@ body.hide-bars-active #autoscroll-panel {
     @apply mt-0.5 block truncate font-mono text-[10px] text-slate-400;
   }
 
-  /* Cada item da lista de aquecimentos salvos: opção + botão de remover. */
+  /* Cada item da lista de sequências salvas: opção + botão de remover. */
   .warmup-option-row {
     @apply flex items-center gap-1 rounded-lg pr-1;
   }
@@ -638,7 +638,7 @@ body.hide-bars-active #autoscroll-panel {
 }
 
 @media (min-width: 768px) {
-  /* Na linha 2 da barra do piano o seletor de aquecimentos fica mais estreito,
+  /* Na linha 2 da barra do piano o seletor de sequências fica mais estreito,
      para que controles e seletor caibam na mesma linha. */
   .piano-toolbar-row .drum-rhythm-picker {
     width: 11rem;
