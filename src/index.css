@@ -563,12 +563,26 @@ body.hide-bars-active #autoscroll-panel {
     @apply text-slate-400;
   }
 
+  /* Passo que está soando agora: mantém o anel azul (a cor de fundo fica para
+     o resultado da voz, verde/vermelho). */
   .warmup-note.is-current {
-    @apply border-blue-500 bg-blue-500 shadow-md;
+    @apply border-blue-500 ring-2 ring-blue-400 ring-offset-1;
   }
 
-  .warmup-note.is-current .warmup-note-pitch,
-  .warmup-note.is-current .warmup-note-duration {
+  /* Voz igual à nota tocada. */
+  .warmup-note.is-match {
+    @apply border-emerald-500 bg-emerald-500;
+  }
+
+  /* Voz diferente da nota tocada. */
+  .warmup-note.is-miss {
+    @apply border-red-500 bg-red-500;
+  }
+
+  .warmup-note.is-match .warmup-note-pitch,
+  .warmup-note.is-match .warmup-note-duration,
+  .warmup-note.is-miss .warmup-note-pitch,
+  .warmup-note.is-miss .warmup-note-duration {
     @apply text-white;
   }
 

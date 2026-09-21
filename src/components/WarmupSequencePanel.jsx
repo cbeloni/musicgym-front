@@ -4,6 +4,7 @@ export default function WarmupSequencePanel({
   warmup,
   isPlaying,
   currentIndex,
+  results = [],
   loop,
   onToggleLoop,
   onTogglePlay,
@@ -56,12 +57,14 @@ export default function WarmupSequencePanel({
         <ol className="warmup-notes">
           {notes.map((note, index) => {
             const duration = describeDuration(note.duration);
+            const result = results[index];
             return (
               <li
                 key={`${note.source}-${index}`}
                 className={`warmup-note${index === currentIndex ? " is-current" : ""}${
                   note.rest ? " is-rest" : ""
-                }`}
+                }${result === "match" ? " is-match" : result === "miss" ? " is-miss" : ""}`}
+                title={result === "match" ? "Voz igual à nota tocada" : result === "miss" ? "Voz diferente da nota tocada" : undefined}
               >
                 <span className="warmup-note-pitch">{note.rest ? "—" : note.pitches.join("+")}</span>
                 <span className="warmup-note-duration" title={duration.name}>

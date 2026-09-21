@@ -42,6 +42,7 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
   const [voice, setVoice] = useState(null);
   const [isPlayingSequence, setIsPlayingSequence] = useState(false);
   const [sequenceIndex, setSequenceIndex] = useState(-1);
+  const [sequenceResults, setSequenceResults] = useState([]);
   const [loopSequence, setLoopSequence] = useState(false);
   const audiosRef = useRef(new Map());
   const loadedSamplesRef = useRef(new Set());
@@ -53,6 +54,8 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
   const levelRef = useRef(null);
   const sequenceTimerRef = useRef(null);
   const sequenceActiveRef = useRef([]);
+  const sequenceResultsRef = useRef([]);
+  const voiceRef = useRef(null);
   const loopRef = useRef(false);
 
   useEffect(() => {
@@ -301,6 +304,30 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
     loopRef.current = loopSequence;
   }, [loopSequence]);
 
+  useEffect(() => {
+    voiceRef.current = voice;
+  }, [voice]);
+
+  // Limpa as marcações de acerto/erro (chamado ao (re)iniciar a sequência).
+  const clearSequenceResults = useCallback(() => {
+    sequenceResultsRef.current = [];
+    setSequenceResults([]);
+  }, []);
+
+  // Marca o passo atual em verde assim que a voz confere com a nota tocada.
+  useEffect(() => {
+    if (!isPlayingSequence || sequenceIndex < 0 || !voice?.inRange) return;
+    const note = warmup.notes[sequenceIndex];
+    if (!note || note.rest || !note.midis.includes(voice.midi)) return;
+    setSequenceResults((current) => {
+      if (current[sequenceIndex] === "match") return current;
+      const next = [...current];
+      next[sequenceIndex] = "match";
+      sequenceResultsRef.current = next;
+      return next;
+    });
+  }, [voice, isPlayingSequence, sequenceIndex, warmup]);
+
   const stopSequence = useCallback(() => {
     window.clearTimeout(sequenceTimerRef.current);
     sequenceTimerRef.current = null;
@@ -316,7 +343,25 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
 
     window.clearTimeout(sequenceTimerRef.current);
     setIsPlayingSequence(true);
+    clearSequenceResults();
     let index = 0;
+
+    const writeResult = (stepIndex, value) => {
+      const next = [...sequenceResultsRef.current];
+      next[stepIndex] = value;
+      sequenceResultsRef.current = next;
+      setSequenceResults(next);
+    };
+
+    // Ao fim de cada passo compara a última nota ouvida com a nota tocada.
+    const finishStep = (stepIndex) => {
+      const note = notes[stepIndex];
+      if (!note || note.rest) return;
+      if (sequenceResultsRef.current[stepIndex] === "match") return; // já acertou
+      const heard = voiceRef.current;
+      if (!heard?.inRange) return; // ninguém cantou: fica sem marcação
+      writeResult(stepIndex, note.midis.includes(heard.midi) ? "match" : "miss");
+    };
 
     const step = () => {
       if (index >= notes.length) {
@@ -325,10 +370,12 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
           return;
         }
         index = 0;
+        clearSequenceResults(); // repetição: limpa as cores
       }
 
       const note = notes[index];
-      setSequenceIndex(index);
+      const current = index;
+      setSequenceIndex(current);
 
       // Solta as notas anteriores para as teclas não ficarem marcadas depois de soar.
       sequenceActiveRef.current.forEach((midi) => releaseNote(midi));
@@ -339,11 +386,14 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
       }
 
       index += 1;
-      sequenceTimerRef.current = window.setTimeout(step, durationMs(note.duration, warmup.bpm));
+      sequenceTimerRef.current = window.setTimeout(() => {
+        finishStep(current);
+        step();
+      }, durationMs(note.duration, warmup.bpm));
     };
 
     step();
-  }, [warmup, playNote, releaseNote, stopSequence]);
+  }, [warmup, playNote, releaseNote, stopSequence, clearSequenceResults]);
 
   const toggleSequence = () => {
     if (isPlayingSequence) stopSequence();
@@ -549,6 +599,7 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
         warmup={warmup}
         isPlaying={isPlayingSequence}
         currentIndex={sequenceIndex}
+        results={sequenceResults}
         loop={loopSequence}
         onToggleLoop={() => setLoopSequence((value) => !value)}
         onTogglePlay={toggleSequence}

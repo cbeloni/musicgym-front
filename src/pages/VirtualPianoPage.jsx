@@ -84,8 +84,8 @@ export default function VirtualPianoPage() {
           <p className="label-section">Ferramenta musical</p>
           <h2>Virtual Piano</h2>
           <p className="virtual-piano-subtitle">
-            Um piano de 61 teclas (C2 a C7) para estudar ouvido, tirar melodias de ouvido e testar
-            harmonias — usando o mouse, o toque ou os atalhos do teclado do computador.
+            Ao usar o microfone, use fone de ouvido — assim o som do piano não entra na captação e a
+            nota da sua voz é identificada com precisão.
           </p>
         </div>
         <Link to="/" className="btn-ghost drum-back-link">
