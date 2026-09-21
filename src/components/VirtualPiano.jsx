@@ -33,6 +33,7 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
   const [showShortcuts, setShowShortcuts] = useState(true);
   const [showNotes, setShowNotes] = useState(true);
   const [loadedCount, setLoadedCount] = useState(0);
+  const [samplesSettled, setSamplesSettled] = useState(false);
   const [lastNote, setLastNote] = useState("");
   const [lastPlayedMidi, setLastPlayedMidi] = useState(null);
   const [listening, setListening] = useState(false);
@@ -351,6 +352,13 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
 
   useEffect(() => () => window.clearTimeout(sequenceTimerRef.current), []);
 
+  // O aviso de carregamento aparece só nos primeiros segundos: se alguma amostra
+  // demorar, o piano continua utilizável sem ficar exibindo o contador.
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSamplesSettled(true), 6000);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   // Reinicia a reprodução quando a sequência do parâmetro muda.
   useEffect(() => {
     stopSequence();
@@ -568,7 +576,7 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
       <p className="piano-hint">
         Toque com o mouse ou use o teclado do computador: <kbd>Shift</kbd> + tecla branca aciona o
         sustenido.
-        {loadedCount < PIANO_KEYS.length && <> Amostras carregadas: {loadProgress}.</>}
+        {!samplesSettled && loadedCount < PIANO_KEYS.length && <> Amostras carregadas: {loadProgress}.</>}
       </p>
 
       <div className="piano-legend" aria-label="Mapa de atalhos do teclado">
