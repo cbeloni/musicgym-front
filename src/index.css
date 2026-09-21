@@ -306,15 +306,24 @@ body.hide-bars-active #autoscroll-panel {
   }
 
   .piano-controls {
-    @apply ml-auto flex flex-wrap items-center gap-2;
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  /* Segunda linha da barra: todos os controles alinhados à esquerda. */
+  .piano-toolbar-row {
+    @apply flex basis-full flex-wrap items-center gap-2 md:gap-3;
   }
 
   .piano-volume {
-    @apply flex h-11 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold uppercase tracking-wider text-slate-500;
+    @apply flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2.5 text-xs font-bold text-slate-500;
+  }
+
+  .piano-volume-icon {
+    @apply h-4 w-4 shrink-0 text-slate-500;
   }
 
   .piano-toggle {
-    @apply h-11 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold uppercase tracking-wider text-slate-500
+    @apply h-11 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold uppercase tracking-wider text-slate-500
            transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700;
   }
 
@@ -349,7 +358,7 @@ body.hide-bars-active #autoscroll-panel {
   }
 
   .piano-warmup {
-    @apply inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold uppercase tracking-wider text-slate-500
+    @apply inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold uppercase tracking-wider text-slate-500
            transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700
            disabled:cursor-wait disabled:opacity-60;
   }
@@ -371,7 +380,7 @@ body.hide-bars-active #autoscroll-panel {
   }
 
   .piano-hint {
-    @apply basis-full text-xs leading-5 text-slate-400;
+    @apply mt-3 text-center text-xs leading-5 text-slate-400;
   }
 
   .piano-hint kbd {
@@ -494,12 +503,108 @@ body.hide-bars-active #autoscroll-panel {
   .piano-legend-sharps strong {
     @apply font-mono font-bold text-slate-600;
   }
+
+  /* Sequência de aquecimento (parâmetro ?aquecimento=) */
+  .warmup-panel {
+    @apply mb-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-3 md:p-4;
+  }
+
+  .warmup-head {
+    @apply flex flex-wrap items-center gap-2 md:gap-3;
+  }
+
+  .warmup-info {
+    @apply flex min-w-0 flex-col gap-1;
+  }
+
+  .warmup-info strong {
+    @apply text-sm font-bold text-slate-800;
+  }
+
+  .warmup-tags {
+    @apply flex items-center gap-2;
+  }
+
+  .warmup-actions {
+    @apply ml-auto flex flex-wrap items-center gap-2;
+  }
+
+  .warmup-play,
+  .warmup-save {
+    @apply px-4 py-2 text-xs;
+  }
+
+  .warmup-play:disabled,
+  .warmup-save:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  .warmup-notes {
+    @apply mt-3 flex flex-wrap gap-1.5;
+  }
+
+  .warmup-note {
+    @apply flex min-w-14 flex-col items-center rounded-lg border border-slate-200 bg-white px-2 py-1.5 shadow-sm transition;
+  }
+
+  .warmup-note-pitch {
+    @apply text-sm font-black leading-none text-slate-800;
+  }
+
+  .warmup-note-duration {
+    @apply mt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400;
+  }
+
+  .warmup-note.is-rest {
+    @apply border-dashed bg-transparent shadow-none;
+  }
+
+  .warmup-note.is-rest .warmup-note-pitch {
+    @apply text-slate-400;
+  }
+
+  .warmup-note.is-current {
+    @apply border-blue-500 bg-blue-500 shadow-md;
+  }
+
+  .warmup-note.is-current .warmup-note-pitch,
+  .warmup-note.is-current .warmup-note-duration {
+    @apply text-white;
+  }
+
+  .warmup-empty {
+    @apply mt-3 text-xs leading-5 text-slate-500;
+  }
+
+  .warmup-empty code {
+    @apply rounded bg-white px-1 py-0.5 font-mono text-[11px] text-slate-700 ring-1 ring-slate-200;
+  }
+
+  .warmup-invalid {
+    @apply mt-2 text-xs font-semibold text-amber-700;
+  }
+
+  .warmup-option-name {
+    @apply block;
+  }
+
+  .warmup-option-sequence {
+    @apply mt-0.5 block truncate font-mono text-[10px] text-slate-400;
+  }
+}
+
+@media (min-width: 768px) {
+  /* Na linha 2 da barra do piano o seletor de aquecimentos fica mais estreito,
+     para que controles e seletor caibam na mesma linha. */
+  .piano-toolbar-row .drum-rhythm-picker {
+    width: 11rem;
+  }
 }
 
 .piano-volume input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
-  width: 7rem;
+  width: 5rem;
   height: 6px;
   border-radius: 999px;
   background: #cbd5e1;
@@ -668,9 +773,9 @@ body.hide-bars-active #autoscroll-panel {
   }
 
   .piano-volume {
-    flex: 1 1 8rem;
+    flex: 1 1 7rem;
     height: 2.75rem;
-    padding: 0 0.75rem;
+    padding: 0 0.625rem;
   }
 
   .piano-volume input[type="range"] {
@@ -728,5 +833,31 @@ body.hide-bars-active #autoscroll-panel {
   .piano-legend-range,
   .piano-legend-sharps {
     font-size: 0.65rem;
+  }
+
+  .warmup-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .warmup-play,
+  .warmup-save,
+  .warmup-panel .piano-toggle {
+    height: 2.5rem;
+    padding: 0 0.75rem;
+    font-size: 0.65rem;
+  }
+
+  .warmup-note {
+    min-width: 2.75rem;
+    padding: 0.3rem 0.4rem;
+  }
+
+  .warmup-note-pitch {
+    font-size: 0.75rem;
+  }
+
+  .warmup-option-sequence {
+    display: none;
   }
 }

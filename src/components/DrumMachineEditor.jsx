@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { DRUM_MACHINE_AI_INSTRUCTION } from "../config/aiInstructions";
+import AiInstructionButton from "./AiInstructionButton";
 
 const STEPS = 16;
 const DEFAULT_BPM = 90;
@@ -152,6 +154,7 @@ export default function DrumMachineEditor({ initialUrl = "", syncUrl = false, on
       <button type="button" className="drum-tool-button" disabled={readOnly} onClick={() => updateBpm(DEFAULT_BPM)}>Tempo padrão</button>
       <button type="button" className="drum-tool-button" disabled={readOnly} onClick={() => { setPattern(emptyPattern()); setSaved(false); }}>Limpar</button>
       <button type="button" className="drum-tool-button" onClick={copyLink}>{copied ? "Link copiado" : "Compartilhar link"}</button>
+      <AiInstructionButton className="drum-tool-button" instruction={DRUM_MACHINE_AI_INSTRUCTION} />
       {onSave && !readOnly && <button type="button" className="btn-primary drum-save-button" onClick={save}>{saved ? "Ritmo salvo" : saveLabel}</button>}
       {toolbarExtra}
     </div>

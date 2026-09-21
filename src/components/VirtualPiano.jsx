@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   PIANO_KEYS,
   PIANO_KEY_BY_MIDI,
@@ -7,7 +8,11 @@ import {
   noteNameFromMidi,
 } from "../config/pianoKeyboard";
 import { pianoSampleUrl } from "../config/sounds";
+import { VIRTUAL_PIANO_AI_INSTRUCTION } from "../config/aiInstructions";
 import { centsFromNote, detectPitch, frequencyToMidi, median } from "../utils/pitchDetection";
+import { durationMs, encodeWarmupParam, parseWarmupParam } from "../utils/warmupSequence";
+import AiInstructionButton from "./AiInstructionButton";
+import WarmupSequencePanel from "./WarmupSequencePanel";
 
 const WHITE_KEYS = PIANO_KEYS.filter((key) => key.isWhite);
 const BLACK_KEYS = PIANO_KEYS.filter((key) => !key.isWhite);
@@ -21,7 +26,8 @@ function formatShortcut(shortcut) {
   return shortcut === " " ? "␣" : shortcut;
 }
 
-export default function VirtualPiano() {
+export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
+  const [searchParams] = useSearchParams();
   const [activeNotes, setActiveNotes] = useState(() => new Set());
   const [volume, setVolume] = useState(0.85);
   const [showShortcuts, setShowShortcuts] = useState(true);
@@ -33,6 +39,9 @@ export default function VirtualPiano() {
   const [micBusy, setMicBusy] = useState(false);
   const [micError, setMicError] = useState("");
   const [voice, setVoice] = useState(null);
+  const [isPlayingSequence, setIsPlayingSequence] = useState(false);
+  const [sequenceIndex, setSequenceIndex] = useState(-1);
+  const [loopSequence, setLoopSequence] = useState(false);
   const audiosRef = useRef(new Map());
   const loadedSamplesRef = useRef(new Set());
   const volumeRef = useRef(0.85);
@@ -41,6 +50,9 @@ export default function VirtualPiano() {
   const activeNotesRef = useRef(activeNotes);
   const micRef = useRef(null);
   const levelRef = useRef(null);
+  const sequenceTimerRef = useRef(null);
+  const sequenceActiveRef = useRef([]);
+  const loopRef = useRef(false);
 
   useEffect(() => {
     activeNotesRef.current = activeNotes;
@@ -279,6 +291,71 @@ export default function VirtualPiano() {
 
   useEffect(() => () => teardownMic(), [teardownMic]);
 
+  // Sequência de aquecimento recebida pelo parâmetro ?aquecimento= da URL.
+  const warmupParam =
+    searchParams.get("aquecimento") ?? searchParams.get("warmup") ?? searchParams.get("data") ?? "";
+  const warmup = useMemo(() => parseWarmupParam(warmupParam), [warmupParam]);
+
+  useEffect(() => {
+    loopRef.current = loopSequence;
+  }, [loopSequence]);
+
+  const stopSequence = useCallback(() => {
+    window.clearTimeout(sequenceTimerRef.current);
+    sequenceTimerRef.current = null;
+    sequenceActiveRef.current.forEach((midi) => releaseNote(midi));
+    sequenceActiveRef.current = [];
+    setIsPlayingSequence(false);
+    setSequenceIndex(-1);
+  }, [releaseNote]);
+
+  const startSequence = useCallback(() => {
+    const notes = warmup.notes;
+    if (!notes.length) return;
+
+    window.clearTimeout(sequenceTimerRef.current);
+    setIsPlayingSequence(true);
+    let index = 0;
+
+    const step = () => {
+      if (index >= notes.length) {
+        if (!loopRef.current) {
+          stopSequence();
+          return;
+        }
+        index = 0;
+      }
+
+      const note = notes[index];
+      setSequenceIndex(index);
+
+      // Solta as notas anteriores para as teclas não ficarem marcadas depois de soar.
+      sequenceActiveRef.current.forEach((midi) => releaseNote(midi));
+      sequenceActiveRef.current = [];
+      if (!note.rest) {
+        note.midis.forEach((midi) => playNote(midi));
+        sequenceActiveRef.current = [...note.midis];
+      }
+
+      index += 1;
+      sequenceTimerRef.current = window.setTimeout(step, durationMs(note.duration, warmup.bpm));
+    };
+
+    step();
+  }, [warmup, playNote, releaseNote, stopSequence]);
+
+  const toggleSequence = () => {
+    if (isPlayingSequence) stopSequence();
+    else startSequence();
+  };
+
+  useEffect(() => () => window.clearTimeout(sequenceTimerRef.current), []);
+
+  // Reinicia a reprodução quando a sequência do parâmetro muda.
+  useEffect(() => {
+    stopSequence();
+  }, [warmupParam, stopSequence]);
+
   // Atalhos de teclado. O controle é feito por `event.code` para que soltar o
   // Shift antes da tecla não deixe a nota presa.
   useEffect(() => {
@@ -348,11 +425,17 @@ export default function VirtualPiano() {
   const detectedMidi = voice?.inRange ? voice.midi : null;
   // Com o aquecimento ligado a última tecla tocada fica sempre marcada.
   const lastPlayedKey = listening ? lastPlayedMidi : null;
+  // Notas da sequência de aquecimento em reprodução (um acorde pode ter várias).
+  const currentSequenceNote = isPlayingSequence ? warmup.notes[sequenceIndex] : null;
+  const sequenceMidis = useMemo(
+    () => new Set(currentSequenceNote && !currentSequenceNote.rest ? currentSequenceNote.midis : []),
+    [currentSequenceNote]
+  );
 
   const keyProps = (key) => ({
     type: "button",
     className: `piano-key ${key.isWhite ? "piano-key-white" : "piano-key-black"}${
-      activeNotes.has(key.midi) ? " is-active" : ""
+      activeNotes.has(key.midi) || sequenceMidis.has(key.midi) ? " is-active" : ""
     }${detectedMidi === key.midi ? " is-detected" : ""}${
       lastPlayedKey === key.midi ? " is-last-played" : ""
     }`,
@@ -394,55 +477,76 @@ export default function VirtualPiano() {
           </span>
         </div>
 
-        <div className="piano-controls">
-          <label className="piano-volume">
-            <span>Volume</span>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={volume}
-              aria-label="Volume do piano"
-              onChange={(event) => setVolume(Number(event.target.value))}
-            />
-          </label>
-          <button
-            type="button"
-            className={`piano-toggle${showShortcuts ? " is-on" : ""}`}
-            aria-pressed={showShortcuts}
-            onClick={() => setShowShortcuts((value) => !value)}
-          >
-            Atalhos
-          </button>
-          <button
-            type="button"
-            className={`piano-toggle${showNotes ? " is-on" : ""}`}
-            aria-pressed={showNotes}
-            onClick={() => setShowNotes((value) => !value)}
-          >
-            Notas
-          </button>
-          <button
-            type="button"
-            className={`piano-warmup${listening ? " is-on" : ""}`}
-            aria-pressed={listening}
-            disabled={micBusy}
-            onClick={toggleWarmup}
-            aria-label={listening ? "Desligar o aquecimento com microfone" : "Ativar o aquecimento com microfone"}
-          >
-            <span className="piano-warmup-dot" aria-hidden="true" />
-            Aquecimento
-          </button>
-        </div>
+        <div className="piano-toolbar-row">
+          <div className="piano-controls">
+            <label className="piano-volume">
+              <svg className="piano-volume-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M11 5 6.5 9H3v6h3.5L11 19z" />
+                <path
+                  d="M15 9.5a3.5 3.5 0 0 1 0 5M17.5 7a7 7 0 0 1 0 10"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={volume}
+                title="Volume"
+                aria-label="Volume do piano"
+                onChange={(event) => setVolume(Number(event.target.value))}
+              />
+            </label>
+            <button
+              type="button"
+              className={`piano-toggle${showShortcuts ? " is-on" : ""}`}
+              aria-pressed={showShortcuts}
+              onClick={() => setShowShortcuts((value) => !value)}
+            >
+              Atalhos
+            </button>
+            <button
+              type="button"
+              className={`piano-toggle${showNotes ? " is-on" : ""}`}
+              aria-pressed={showNotes}
+              onClick={() => setShowNotes((value) => !value)}
+            >
+              Notas
+            </button>
+            <button
+              type="button"
+              className={`piano-warmup${listening ? " is-on" : ""}`}
+              aria-pressed={listening}
+              disabled={micBusy}
+              onClick={toggleWarmup}
+              aria-label={listening ? "Desligar o aquecimento com microfone" : "Ativar o aquecimento com microfone"}
+            >
+              <span className="piano-warmup-dot" aria-hidden="true" />
+              Aquecimento
+            </button>
+            <AiInstructionButton className="piano-toggle" instruction={VIRTUAL_PIANO_AI_INSTRUCTION} />
+          </div>
 
-        <p className="piano-hint">
-          Toque com o mouse ou use o teclado do computador: <kbd>Shift</kbd> + tecla branca aciona o
-          sustenido. Amostras carregadas: {loadProgress}.
-        </p>
+          {toolbarExtra}
+        </div>
 
         {micError && <p className="piano-mic-error">{micError}</p>}
       </div>
+
+      <WarmupSequencePanel
+        warmup={warmup}
+        isPlaying={isPlayingSequence}
+        currentIndex={sequenceIndex}
+        loop={loopSequence}
+        onToggleLoop={() => setLoopSequence((value) => !value)}
+        onTogglePlay={toggleSequence}
+        onSave={onSave ? () => onSave(encodeWarmupParam(warmup)) : undefined}
+        saveLabel={saveLabel}
+      />
 
       <div className="piano-stage">
         <div className="piano-keyboard" role="group" aria-label="Teclado do piano virtual de C2 a C7">
@@ -460,6 +564,12 @@ export default function VirtualPiano() {
           ))}
         </div>
       </div>
+
+      <p className="piano-hint">
+        Toque com o mouse ou use o teclado do computador: <kbd>Shift</kbd> + tecla branca aciona o
+        sustenido.
+        {loadedCount < PIANO_KEYS.length && <> Amostras carregadas: {loadProgress}.</>}
+      </p>
 
       <div className="piano-legend" aria-label="Mapa de atalhos do teclado">
         <p className="label-section">Mapa de atalhos</p>
