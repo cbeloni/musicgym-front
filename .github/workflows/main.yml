@@ -29,6 +29,7 @@ jobs:
       - uses: danielr1996/envsubst-action@1.0.0
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_PIANO_SOUND_URL: ${{ vars.VITE_PIANO_SOUND_URL }}
         with:
           input: .env.template
           output: .env

@@ -12,6 +12,7 @@ import RecentlyViewedPage from "./pages/RecentlyViewedPage";
 import SharedChordSheetPage from "./pages/SharedChordSheetPage";
 import SharedSetlistPage from "./pages/SharedSetlistPage";
 import DrumMachinePage from "./pages/DrumMachinePage";
+import VirtualPianoPage from "./pages/VirtualPianoPage";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 
 function MainAppContent() {
@@ -37,11 +38,12 @@ function MainAppContent() {
           </Link>
 
           <div className="flex items-center gap-2 md:gap-4">
-            <nav className="hidden md:flex items-center gap-2">
+            <nav className="hidden md:flex flex-wrap items-center gap-2 [&>a]:whitespace-nowrap">
               <Link className="btn-ghost" to="/">Home</Link>
               <Link className="btn-ghost" to="/setlists">Setlists</Link>
               <Link className="btn-ghost" to="/cifras">Cifras</Link>
               <Link className="btn-ghost" to="/drum-machine">Drum Machine</Link>
+              <Link className="btn-ghost" to="/virtual-piano">Virtual Piano</Link>
               {isAuthenticated && (
                 <Link className="btn-ghost" to="/recentes">Recentes</Link>
               )}
@@ -89,6 +91,7 @@ function MainAppContent() {
               <Link to="/setlists" className="btn-ghost justify-start" onClick={closeMobileMenu}>Setlists</Link>
               <Link to="/cifras" className="btn-ghost justify-start" onClick={closeMobileMenu}>Cifras</Link>
               <Link to="/drum-machine" className="btn-ghost justify-start" onClick={closeMobileMenu}>Drum Machine</Link>
+              <Link to="/virtual-piano" className="btn-ghost justify-start" onClick={closeMobileMenu}>Virtual Piano</Link>
               {isAuthenticated && (
                 <Link to="/recentes" className="btn-ghost justify-start" onClick={closeMobileMenu}>Recentes</Link>
               )}
@@ -123,6 +126,7 @@ function MainAppContent() {
           <Route path="/cifras" element={<ChordSheetListPage />} />
           <Route path="/cifras/nova" element={<ChordSheetFormPage />} />
           <Route path="/cifras/:id" element={<ChordSheetPage />} />
+          <Route path="/virtual-piano" element={<VirtualPianoPage />} />
           <Route path="/cifras/:id/editar" element={<ChordSheetFormPage />} />
           <Route path="/drum-machine" element={<DrumMachinePage />} />
           <Route path="/recentes" element={<RecentlyViewedPage />} />
