@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import VirtualPiano from "../components/VirtualPiano";
 import { useAuth } from "../components/AuthContext";
-import { createPianoWarmup, fetchPianoWarmups, updatePianoWarmup } from "../services/api";
+import { createPianoWarmup, deletePianoWarmup, fetchPianoWarmups, updatePianoWarmup } from "../services/api";
 
 export default function VirtualPianoPage() {
   const [, setSearchParams] = useSearchParams();
@@ -77,6 +77,17 @@ export default function VirtualPianoPage() {
     setSearchParams({ aquecimento: warmup.sequence });
   };
 
+  const removeWarmup = async (warmup) => {
+    if (!window.confirm(`Remover o aquecimento “${warmup.name}”?`)) return;
+    try {
+      await deletePianoWarmup(warmup.id);
+      setSavedWarmups((current) => current.filter((item) => item.id !== warmup.id));
+      if (String(warmup.id) === String(selectedWarmupId)) setSelectedWarmupId("");
+    } catch {
+      window.alert("Não foi possível remover o aquecimento. Verifique se você está autenticado.");
+    }
+  };
+
   return (
     <section className="virtual-piano-page">
       <div className="virtual-piano-heading">
@@ -121,17 +132,27 @@ export default function VirtualPianoPage() {
                 <div className="drum-rhythm-options" role="listbox" aria-label="Aquecimentos salvos">
                   {filteredWarmups.length > 0 ? (
                     filteredWarmups.map((warmup) => (
-                      <button
-                        type="button"
-                        role="option"
-                        aria-selected={String(warmup.id) === String(selectedWarmupId)}
-                        className="drum-rhythm-option"
-                        key={warmup.id}
-                        onClick={() => loadWarmup(warmup)}
-                      >
-                        <span className="warmup-option-name">{warmup.name}</span>
-                        <span className="warmup-option-sequence">{warmup.sequence}</span>
-                      </button>
+                      <div className="warmup-option-row" role="presentation" key={warmup.id}>
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={String(warmup.id) === String(selectedWarmupId)}
+                          className="drum-rhythm-option"
+                          onClick={() => loadWarmup(warmup)}
+                        >
+                          <span className="warmup-option-name truncate">{warmup.name}</span>
+                          <span className="warmup-option-sequence">{warmup.sequence}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="warmup-option-delete"
+                          onClick={() => removeWarmup(warmup)}
+                          aria-label={`Remover o aquecimento ${warmup.name}`}
+                          title="Remover aquecimento"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     ))
                   ) : (
                     <p className="drum-rhythm-empty">

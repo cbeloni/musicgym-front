@@ -605,6 +605,24 @@ body.hide-bars-active #autoscroll-panel {
   .warmup-option-sequence {
     @apply mt-0.5 block truncate font-mono text-[10px] text-slate-400;
   }
+
+  /* Cada item da lista de aquecimentos salvos: opção + botão de remover. */
+  .warmup-option-row {
+    @apply flex items-center gap-1 rounded-lg pr-1;
+  }
+
+  .warmup-option-row:hover {
+    @apply bg-blue-50;
+  }
+
+  .warmup-option-row .drum-rhythm-option {
+    @apply min-w-0 flex-1;
+  }
+
+  .warmup-option-delete {
+    @apply flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-slate-300
+           transition hover:bg-red-100 hover:text-red-600;
+  }
 }
 
 @media (min-width: 768px) {

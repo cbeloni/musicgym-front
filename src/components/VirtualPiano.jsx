@@ -52,6 +52,7 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
   const activeNotesRef = useRef(activeNotes);
   const micRef = useRef(null);
   const levelRef = useRef(null);
+  const fadeTimersRef = useRef(new Map());
   const sequenceTimerRef = useRef(null);
   const sequenceActiveRef = useRef([]);
   const sequenceResultsRef = useRef([]);
@@ -109,6 +110,8 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
 
   useEffect(
     () => () => {
+      fadeTimersRef.current.forEach((timer) => window.clearInterval(timer));
+      fadeTimersRef.current.clear();
       audiosRef.current.forEach((audio) => {
         audio.pause();
         audio.src = "";
@@ -125,6 +128,36 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
     });
   }, [volume]);
 
+  // A nota soa enquanto a tecla estiver pressionada. Ao soltar, o som é
+  // interrompido com um fade curto para não estalar (como o abafador do piano).
+  const stopAudio = useCallback((midi, fade = 90) => {
+    const audio = audiosRef.current.get(midi);
+    if (!audio || audio.paused) return;
+
+    const pending = fadeTimersRef.current.get(midi);
+    if (pending) window.clearInterval(pending);
+
+    const startVolume = audio.volume || volumeRef.current;
+    const startedAt = performance.now();
+    const timer = window.setInterval(() => {
+      const elapsed = performance.now() - startedAt;
+      if (elapsed >= fade) {
+        window.clearInterval(timer);
+        fadeTimersRef.current.delete(midi);
+        audio.pause();
+        try {
+          audio.currentTime = 0;
+        } catch {
+          /* amostra ainda carregando */
+        }
+        audio.volume = volumeRef.current;
+        return;
+      }
+      audio.volume = startVolume * (1 - elapsed / fade);
+    }, 16);
+    fadeTimersRef.current.set(midi, timer);
+  }, []);
+
   const playNote = useCallback(
     (midi) => {
       const key = PIANO_KEY_BY_MIDI.get(midi);
@@ -132,6 +165,13 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
 
       const audio = getAudio(midi);
       if (audio) {
+        // Cancela um fade em andamento caso a nota seja repetida.
+        const pending = fadeTimersRef.current.get(midi);
+        if (pending) {
+          window.clearInterval(pending);
+          fadeTimersRef.current.delete(midi);
+        }
+        audio.volume = volumeRef.current;
         if (audio.readyState > 0) {
           try {
             audio.currentTime = 0;
@@ -155,20 +195,25 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
     [getAudio]
   );
 
-  const releaseNote = useCallback((midi) => {
-    setActiveNotes((current) => {
-      if (!current.has(midi)) return current;
-      const next = new Set(current);
-      next.delete(midi);
-      return next;
-    });
-  }, []);
+  const releaseNote = useCallback(
+    (midi) => {
+      stopAudio(midi);
+      setActiveNotes((current) => {
+        if (!current.has(midi)) return current;
+        const next = new Set(current);
+        next.delete(midi);
+        return next;
+      });
+    },
+    [stopAudio]
+  );
 
   const releaseAll = useCallback(() => {
     pointerNotesRef.current.clear();
     keyboardNotesRef.current.clear();
+    audiosRef.current.forEach((audio, midi) => stopAudio(midi, 60));
     setActiveNotes((current) => (current.size === 0 ? current : new Set()));
-  }, []);
+  }, [stopAudio]);
 
   const teardownMic = useCallback(() => {
     const state = micRef.current;

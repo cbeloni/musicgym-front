@@ -351,6 +351,10 @@ export async function updatePianoWarmup(id, name, sequence) {
   return data;
 }
 
+export async function deletePianoWarmup(id) {
+  await api.delete(`/piano/warmups/${id}`);
+}
+
 export async function deleteChordSheet(id) {
   await api.delete(`/chord-sheets/${id}`);
 }
