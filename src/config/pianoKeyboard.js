@@ -53,6 +53,12 @@ function noteName(midi) {
   return `${NOTE_NAMES[midi % 12]}${Math.floor(midi / 12) - 1}`;
 }
 
+// Usado também por ferramentas que identificam notas fora da extensão do teclado.
+export function noteNameFromMidi(midi) {
+  const pitchClass = ((midi % 12) + 12) % 12;
+  return `${NOTE_NAMES[pitchClass]}${Math.floor(midi / 12) - 1}`;
+}
+
 function sampleFile(midi) {
   const octave = Math.floor(midi / 12) - 1;
   const samples = SAMPLE_NAMES[octave];

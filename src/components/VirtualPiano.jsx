@@ -1,11 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PIANO_KEYS, PIANO_KEY_BY_MIDI, PIANO_MIDI_BY_SHORTCUT, PIANO_ROWS } from "../config/pianoKeyboard";
+import {
+  PIANO_KEYS,
+  PIANO_KEY_BY_MIDI,
+  PIANO_MIDI_BY_SHORTCUT,
+  PIANO_ROWS,
+  noteNameFromMidi,
+} from "../config/pianoKeyboard";
 import { pianoSampleUrl } from "../config/sounds";
+import { centsFromNote, detectPitch, frequencyToMidi, median } from "../utils/pitchDetection";
 
 const WHITE_KEYS = PIANO_KEYS.filter((key) => key.isWhite);
 const BLACK_KEYS = PIANO_KEYS.filter((key) => !key.isWhite);
 const PRELOAD_BATCH = 6;
 const PRELOAD_INTERVAL = 140;
+const ANALYSIS_INTERVAL = 70; // ~14 análises por segundo
+const VOICE_TIMEOUT = 400; // tempo sem voz para limpar a nota detectada
+const ESTIMATES_WINDOW = 6; // amostras usadas na mediana do pitch
 
 function formatShortcut(shortcut) {
   return shortcut === " " ? "␣" : shortcut;
@@ -18,12 +28,19 @@ export default function VirtualPiano() {
   const [showNotes, setShowNotes] = useState(true);
   const [loadedCount, setLoadedCount] = useState(0);
   const [lastNote, setLastNote] = useState("");
+  const [lastPlayedMidi, setLastPlayedMidi] = useState(null);
+  const [listening, setListening] = useState(false);
+  const [micBusy, setMicBusy] = useState(false);
+  const [micError, setMicError] = useState("");
+  const [voice, setVoice] = useState(null);
   const audiosRef = useRef(new Map());
   const loadedSamplesRef = useRef(new Set());
   const volumeRef = useRef(0.85);
   const pointerNotesRef = useRef(new Map());
   const keyboardNotesRef = useRef(new Map());
   const activeNotesRef = useRef(activeNotes);
+  const micRef = useRef(null);
+  const levelRef = useRef(null);
 
   useEffect(() => {
     activeNotesRef.current = activeNotes;
@@ -74,13 +91,16 @@ export default function VirtualPiano() {
     };
   }, [getAudio]);
 
-  useEffect(() => () => {
-    audiosRef.current.forEach((audio) => {
-      audio.pause();
-      audio.src = "";
-    });
-    audiosRef.current.clear();
-  }, []);
+  useEffect(
+    () => () => {
+      audiosRef.current.forEach((audio) => {
+        audio.pause();
+        audio.src = "";
+      });
+      audiosRef.current.clear();
+    },
+    []
+  );
 
   useEffect(() => {
     volumeRef.current = volume;
@@ -108,6 +128,7 @@ export default function VirtualPiano() {
       }
 
       setLastNote(key.note);
+      setLastPlayedMidi(midi);
       setActiveNotes((current) => {
         if (current.has(midi)) return current;
         const next = new Set(current);
@@ -132,6 +153,131 @@ export default function VirtualPiano() {
     keyboardNotesRef.current.clear();
     setActiveNotes((current) => (current.size === 0 ? current : new Set()));
   }, []);
+
+  const teardownMic = useCallback(() => {
+    const state = micRef.current;
+    micRef.current = null;
+    if (!state) return;
+    if (state.timer) window.clearInterval(state.timer);
+    state.stream?.getTracks().forEach((track) => track.stop());
+    state.context?.close().catch(() => {});
+  }, []);
+
+  const stopWarmup = useCallback(() => {
+    teardownMic();
+    if (levelRef.current) levelRef.current.style.transform = "scaleX(0)";
+    setListening(false);
+    setVoice(null);
+  }, [teardownMic]);
+
+  // Aquecimento: liga o microfone, identifica a nota cantada e destaca a tecla.
+  const startWarmup = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setMicError("O microfone exige uma conexão segura (HTTPS) ou localhost.");
+      return;
+    }
+
+    setMicBusy(true);
+    setMicError("");
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+      });
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      const context = new AudioContextClass();
+      await context.resume();
+
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0;
+      context.createMediaStreamSource(stream).connect(analyser);
+
+      const state = {
+        stream,
+        context,
+        analyser,
+        buffer: new Float32Array(analyser.fftSize),
+        estimates: [],
+        timer: null,
+        lastVoice: 0,
+        lastPush: 0,
+        current: null,
+      };
+      micRef.current = state;
+      setListening(true);
+
+      const runAnalysis = () => {
+        const active = micRef.current;
+        if (!active) return;
+
+        const now = performance.now();
+
+        active.analyser.getFloatTimeDomainData(active.buffer);
+        const result = detectPitch(active.buffer, active.context.sampleRate);
+
+        if (levelRef.current) {
+          levelRef.current.style.transform = `scaleX(${Math.min(1, result.level * 12).toFixed(3)})`;
+        }
+
+        if (!result.frequency) {
+          if (active.current && now - active.lastVoice > VOICE_TIMEOUT) {
+            active.current = null;
+            active.estimates.length = 0;
+            setVoice(null);
+          }
+          return;
+        }
+
+        active.lastVoice = now;
+        active.estimates.push(result.frequency);
+        if (active.estimates.length > ESTIMATES_WINDOW) active.estimates.shift();
+
+        // Leituras muito distantes indicam troca de nota: encolhe a janela para
+        // acompanhar a nova nota sem esperar o filtro estabilizar.
+        const spread =
+          Math.max(...active.estimates) / Math.min(...active.estimates);
+        if (spread > 1.12) active.estimates = active.estimates.slice(-2);
+
+        const frequency = median(active.estimates);
+        const midi = frequencyToMidi(frequency);
+        const key = PIANO_KEY_BY_MIDI.get(midi);
+        const changed = active.current?.midi !== midi;
+
+        if (changed || now - active.lastPush > 150) {
+          active.lastPush = now;
+          active.current = {
+            midi,
+            note: key?.note || noteNameFromMidi(midi),
+            inRange: Boolean(key),
+            frequency,
+            cents: centsFromNote(frequency, midi),
+            clarity: result.clarity,
+          };
+          setVoice(active.current);
+        }
+      };
+
+      state.timer = window.setInterval(runAnalysis, ANALYSIS_INTERVAL);
+      runAnalysis();
+    } catch (error) {
+      setMicError(
+        error?.name === "NotAllowedError"
+          ? "Permissão de microfone negada. Autorize o acesso para usar o aquecimento."
+          : "Não foi possível acessar o microfone."
+      );
+      stopWarmup();
+    } finally {
+      setMicBusy(false);
+    }
+  }, [stopWarmup]);
+
+  const toggleWarmup = () => {
+    if (listening) stopWarmup();
+    else startWarmup();
+  };
+
+  useEffect(() => () => teardownMic(), [teardownMic]);
 
   // Atalhos de teclado. O controle é feito por `event.code` para que soltar o
   // Shift antes da tecla não deixe a nota presa.
@@ -199,22 +345,27 @@ export default function VirtualPiano() {
     playNote(midi);
   };
 
+  const detectedMidi = voice?.inRange ? voice.midi : null;
+  // Com o aquecimento ligado a última tecla tocada fica sempre marcada.
+  const lastPlayedKey = listening ? lastPlayedMidi : null;
+
   const keyProps = (key) => ({
     type: "button",
     className: `piano-key ${key.isWhite ? "piano-key-white" : "piano-key-black"}${
       activeNotes.has(key.midi) ? " is-active" : ""
+    }${detectedMidi === key.midi ? " is-detected" : ""}${
+      lastPlayedKey === key.midi ? " is-last-played" : ""
     }`,
     style: { left: `${key.left}%`, width: `${key.width}%` },
     onPointerDown: (event) => handlePointerDown(event, key.midi),
     onPointerEnter: (event) => handlePointerEnter(event, key.midi),
     onContextMenu: (event) => event.preventDefault(),
-    "aria-label": `Nota ${key.note}${key.shortcut ? `, atalho ${key.shortcut}` : ""}`,
+    "aria-label": `Nota ${key.note}${key.shortcut ? `, atalho ${key.shortcut}` : ""}${
+      detectedMidi === key.midi ? ", nota detectada no microfone" : ""
+    }${lastPlayedKey === key.midi ? ", última tecla tocada" : ""}`,
   });
 
-  const loadProgress = useMemo(
-    () => `${loadedCount}/${PIANO_KEYS.length}`,
-    [loadedCount]
-  );
+  const loadProgress = useMemo(() => `${loadedCount}/${PIANO_KEYS.length}`, [loadedCount]);
 
   return (
     <div className="piano-card panel">
@@ -222,6 +373,25 @@ export default function VirtualPiano() {
         <div className="piano-readout">
           <span className="label-section">Nota tocada</span>
           <strong className={lastNote ? "" : "is-muted"}>{lastNote || "—"}</strong>
+        </div>
+
+        <div className="piano-readout piano-readout-voice">
+          <span className="label-section">Voz</span>
+          <span className="piano-voice-line">
+            <strong className={voice ? "is-voice" : "is-muted"}>{voice?.note || "—"}</strong>
+            <span className="piano-voice-detail">
+              {voice
+                ? `${voice.frequency.toFixed(1)} Hz · ${voice.cents > 0 ? "+" : ""}${voice.cents} ¢${
+                    voice.inRange ? "" : " · fora"
+                  }`
+                : listening
+                  ? "ouvindo…"
+                  : "desligado"}
+            </span>
+          </span>
+          <span className="piano-level" aria-hidden="true">
+            <i ref={levelRef} />
+          </span>
         </div>
 
         <div className="piano-controls">
@@ -253,12 +423,25 @@ export default function VirtualPiano() {
           >
             Notas
           </button>
+          <button
+            type="button"
+            className={`piano-warmup${listening ? " is-on" : ""}`}
+            aria-pressed={listening}
+            disabled={micBusy}
+            onClick={toggleWarmup}
+            aria-label={listening ? "Desligar o aquecimento com microfone" : "Ativar o aquecimento com microfone"}
+          >
+            <span className="piano-warmup-dot" aria-hidden="true" />
+            Aquecimento
+          </button>
         </div>
 
         <p className="piano-hint">
           Toque com o mouse ou use o teclado do computador: <kbd>Shift</kbd> + tecla branca aciona o
           sustenido. Amostras carregadas: {loadProgress}.
         </p>
+
+        {micError && <p className="piano-mic-error">{micError}</p>}
       </div>
 
       <div className="piano-stage">
