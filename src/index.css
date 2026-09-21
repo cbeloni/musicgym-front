@@ -579,6 +579,17 @@ body.hide-bars-active #autoscroll-panel {
     @apply border-red-500 bg-red-500;
   }
 
+  /* Voz acima da nota esperada: faixa azul no topo da caixa.
+     A cor é definida em linha, mais escura quanto maior o erro. */
+  .warmup-note.is-miss-above {
+    @apply border-t-[6px] border-t-blue-600;
+  }
+
+  /* Voz abaixo da nota esperada: faixa azul na base da caixa. */
+  .warmup-note.is-miss-below {
+    @apply border-b-[6px] border-b-blue-600;
+  }
+
   .warmup-note.is-match .warmup-note-pitch,
   .warmup-note.is-match .warmup-note-duration,
   .warmup-note.is-miss .warmup-note-pitch,

@@ -365,9 +365,9 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
     const note = warmup.notes[sequenceIndex];
     if (!note || note.rest || !note.midis.includes(voice.midi)) return;
     setSequenceResults((current) => {
-      if (current[sequenceIndex] === "match") return current;
+      if (current[sequenceIndex]?.kind === "match") return current;
       const next = [...current];
-      next[sequenceIndex] = "match";
+      next[sequenceIndex] = { kind: "match" };
       sequenceResultsRef.current = next;
       return next;
     });
@@ -402,10 +402,28 @@ export default function VirtualPiano({ onSave, saveLabel, toolbarExtra }) {
     const finishStep = (stepIndex) => {
       const note = notes[stepIndex];
       if (!note || note.rest) return;
-      if (sequenceResultsRef.current[stepIndex] === "match") return; // já acertou
+      if (sequenceResultsRef.current[stepIndex]?.kind === "match") return; // já acertou
       const heard = voiceRef.current;
       if (!heard?.inRange) return; // ninguém cantou: fica sem marcação
-      writeResult(stepIndex, note.midis.includes(heard.midi) ? "match" : "miss");
+
+      // Em acordes, compara com a nota do acorde mais próxima da voz.
+      const closest = note.midis.reduce(
+        (best, midi) => (Math.abs(midi - heard.midi) < Math.abs(best - heard.midi) ? midi : best),
+        note.midis[0]
+      );
+
+      if (closest === heard.midi && Math.abs(heard.cents) < 50) {
+        writeResult(stepIndex, { kind: "match" });
+        return;
+      }
+
+      // Guarda a direção e o tamanho do erro (em semitons, com a fração de cents).
+      const deviation = Math.abs(heard.midi - closest + heard.cents / 100);
+      writeResult(stepIndex, {
+        kind: "miss",
+        direction: heard.midi > closest || (heard.midi === closest && heard.cents > 0) ? "above" : "below",
+        deviation,
+      });
     };
 
     const step = () => {

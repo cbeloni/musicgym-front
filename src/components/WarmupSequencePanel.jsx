@@ -1,5 +1,14 @@
 import { describeDuration, describeWarmup } from "../utils/warmupSequence";
 
+// Quanto maior o erro, mais escura fica a faixa azul (de azul claro a azul escuro).
+function errorColor(deviation) {
+  const t = Math.min(1, Math.max(0, (deviation - 1) / 3)); // 1 semitom -> claro, 4+ -> escuro
+  const light = [191, 219, 254];
+  const dark = [30, 58, 138];
+  const rgb = light.map((channel, index) => Math.round(channel + (dark[index] - channel) * t));
+  return `rgb(${rgb.join(", ")})`;
+}
+
 export default function WarmupSequencePanel({
   warmup,
   isPlaying,
@@ -58,13 +67,32 @@ export default function WarmupSequencePanel({
           {notes.map((note, index) => {
             const duration = describeDuration(note.duration);
             const result = results[index];
+            const matched = result?.kind === "match";
+            const missed = result?.kind === "miss";
+            const semitones = missed ? `${result.deviation.toFixed(1).replace(".", ",")} semitons` : "";
+            const resultTitle = matched
+              ? "Voz igual à nota tocada"
+              : missed
+                ? `Voz ${result.direction === "above" ? "acima" : "abaixo"} da nota tocada (${semitones})`
+                : undefined;
             return (
               <li
                 key={`${note.source}-${index}`}
                 className={`warmup-note${index === currentIndex ? " is-current" : ""}${
                   note.rest ? " is-rest" : ""
-                }${result === "match" ? " is-match" : result === "miss" ? " is-miss" : ""}`}
-                title={result === "match" ? "Voz igual à nota tocada" : result === "miss" ? "Voz diferente da nota tocada" : undefined}
+                }${matched ? " is-match" : missed ? " is-miss" : ""}${
+                  missed && result.direction === "above" ? " is-miss-above" : ""
+                }${missed && result.direction === "below" ? " is-miss-below" : ""}`}
+                style={
+                  missed
+                    ? {
+                        [result.direction === "above" ? "borderTopColor" : "borderBottomColor"]: errorColor(
+                          result.deviation
+                        ),
+                      }
+                    : undefined
+                }
+                title={resultTitle}
               >
                 <span className="warmup-note-pitch">{note.rest ? "—" : note.pitches.join("+")}</span>
                 <span className="warmup-note-duration" title={duration.name}>
