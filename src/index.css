@@ -579,15 +579,16 @@ body.hide-bars-active #autoscroll-panel {
     @apply border-red-500 bg-red-500;
   }
 
-  /* Voz acima da nota esperada: faixa azul no topo da caixa.
-     A cor é definida em linha, mais escura quanto maior o erro. */
+  /* Voz acima da nota esperada: faixa no topo da caixa.
+     A cor é definida em linha: verde claro com 1 semitom de erro, passando por
+     tons de ciano, até azul escuro com 4 ou mais semitons. */
   .warmup-note.is-miss-above {
-    @apply border-t-[6px] border-t-blue-600;
+    @apply border-t-[6px] border-t-green-300;
   }
 
-  /* Voz abaixo da nota esperada: faixa azul na base da caixa. */
+  /* Voz abaixo da nota esperada: faixa na base da caixa. */
   .warmup-note.is-miss-below {
-    @apply border-b-[6px] border-b-blue-600;
+    @apply border-b-[6px] border-b-green-300;
   }
 
   .warmup-note.is-match .warmup-note-pitch,

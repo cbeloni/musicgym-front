@@ -1,12 +1,13 @@
 import { describeDuration, describeWarmup } from "../utils/warmupSequence";
 
-// Quanto maior o erro, mais escura fica a faixa azul (de azul claro a azul escuro).
+// Quanto maior o erro, mais escura fica a faixa: 1 semitom errado = verde claro
+// (quase certo), 2–3 semitons = tons de ciano e 4+ semitons = azul escuro.
 function errorColor(deviation) {
-  const t = Math.min(1, Math.max(0, (deviation - 1) / 3)); // 1 semitom -> claro, 4+ -> escuro
-  const light = [191, 219, 254];
-  const dark = [30, 58, 138];
-  const rgb = light.map((channel, index) => Math.round(channel + (dark[index] - channel) * t));
-  return `rgb(${rgb.join(", ")})`;
+  const t = Math.min(1, Math.max(0, (deviation - 1) / 3)); // 1 semitom -> verde claro, 4+ -> azul escuro
+  const start = { h: 142, s: 69, l: 73 }; // hsl do verde claro
+  const end = { h: 225, s: 64, l: 33 }; // hsl do azul escuro
+  const mix = (from, to) => Math.round(from + (to - from) * t);
+  return `hsl(${mix(start.h, end.h)}, ${mix(start.s, end.s)}%, ${mix(start.l, end.l)}%)`;
 }
 
 export default function WarmupSequencePanel({
