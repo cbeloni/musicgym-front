@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../components/AuthContext";
-import { createChordSheet, fetchChordSheet, isPdfAsset, resolveChordSheetAsset, updateChordSheet } from "../services/api";
+import {
+  createChordSheet,
+  fetchChordSheet,
+  isPdfAsset,
+  resolveChordSheetAsset,
+  resolveChordSheetAudio,
+  updateChordSheet,
+} from "../services/api";
 
 export default function ChordSheetFormPage() {
   const { id } = useParams();
@@ -15,6 +22,7 @@ export default function ChordSheetFormPage() {
   const [imageDataList, setImageDataList] = useState([]);
   const [entryMode, setEntryMode] = useState("text");
   const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [audioData, setAudioData] = useState("");
   const [drumMachine, setDrumMachine] = useState("");
   const [content, setContent] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
@@ -37,6 +45,12 @@ export default function ChordSheetFormPage() {
       image
     );
 
+  // Prévia do áudio: data URI (novo upload) ou caminho no bucket (cifra já salva)
+  const audioPreviewSrc = resolveChordSheetAudio({
+    audio_data: audioData,
+    bucket_base_url: bucketBaseUrl,
+  });
+
   const selectTextMode = () => {
     setEntryMode("text");
     setError("");
@@ -51,7 +65,7 @@ export default function ChordSheetFormPage() {
     new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
-      reader.onerror = () => reject(new Error("Não foi possível ler a imagem selecionada."));
+      reader.onerror = () => reject(new Error("Não foi possível ler o arquivo selecionado."));
       reader.readAsDataURL(file);
     });
 
@@ -87,6 +101,35 @@ export default function ChordSheetFormPage() {
     setImageDataList((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Upload do áudio da cifra: mesmo mecanismo do arquivo da cifra (data URI),
+  // a API envia para o bucket na pasta `audios`.
+  const handleAudioFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("audio/")) {
+      setError("Selecione um arquivo de áudio (MP3, WAV, OGG...).");
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      if (dataUrl) {
+        setAudioData(dataUrl);
+        setError("");
+      }
+    } catch (err) {
+      setError(err.message || "Não foi possível ler o áudio selecionado.");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const handleRemoveAudio = () => {
+    setAudioData("");
+  };
+
   useEffect(() => {
     if (isEditMode) {
       loadChordSheet();
@@ -102,6 +145,7 @@ export default function ChordSheetFormPage() {
       setKeySignature(data.key_signature || "");
       setImageDataList(Array.isArray(data.image_data) ? data.image_data : []);
       setYoutubeUrl(data.youtube_url || "");
+      setAudioData(data.audio_data || "");
       setDrumMachine(data.drum_machine || "");
       setContent(data.content);
       setIsPrivate(Boolean(data.is_private));
@@ -152,7 +196,8 @@ export default function ChordSheetFormPage() {
           youtubeUrl,
           1,
           isPrivate,
-          drumMachine
+          drumMachine,
+          audioData
         );
         navigate(`/cifras/${id}`);
       } else {
@@ -165,7 +210,8 @@ export default function ChordSheetFormPage() {
           youtubeUrl,
           1,
           isPrivate,
-          drumMachine
+          drumMachine,
+          audioData
         );
         navigate(`/cifras/${newSheet.id}`);
       }
@@ -195,7 +241,7 @@ export default function ChordSheetFormPage() {
           {isEditMode ? "Editar Cifra" : "Criar Nova Cifra"}
         </h2>
         <p className="mt-2 text-sm text-slate-600">
-          Insira os detalhes da música, a cifra em texto, uma imagem ou um PDF.
+          Insira os detalhes da música, a cifra em texto, uma imagem, um PDF e/ou o áudio da cifra.
         </p>
       </header>
 
@@ -261,6 +307,54 @@ export default function ChordSheetFormPage() {
               onChange={(e) => setYoutubeUrl(e.target.value)}
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition-all focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
             />
+          </div>
+        </div>
+
+        {/* Áudio da cifra (opcional) — é tocado no mesmo local do vídeo do YouTube */}
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+              Áudio da Cifra (Opcional)
+            </label>
+            <span className="text-[10px] text-slate-400 font-semibold uppercase">
+              MP3, WAV, OGG...
+            </span>
+          </div>
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                type="file"
+                accept="audio/*,.mp3,.m4a,.wav,.ogg"
+                onChange={handleAudioFileChange}
+                className="block w-full text-xs text-slate-500 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-slate-700"
+              />
+              <button
+                type="button"
+                onClick={handleRemoveAudio}
+                disabled={!audioData}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-[11px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Remover áudio
+              </button>
+            </div>
+            <div className="text-[11px] leading-5 text-slate-500">
+              Envie o áudio da cifra para tocar junto com a letra. Se a cifra também tiver
+              vídeo do YouTube, o player exibe abas para escolher entre vídeo e áudio.
+            </div>
+            {audioPreviewSrc ? (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <audio
+                  src={audioPreviewSrc}
+                  controls
+                  preload="metadata"
+                  className="w-full"
+                />
+              </div>
+            ) : (
+              <div className="flex h-20 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs text-slate-400">
+                Nenhum áudio selecionado.
+              </div>
+            )}
           </div>
         </div>
 

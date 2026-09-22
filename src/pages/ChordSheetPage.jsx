@@ -3,7 +3,7 @@ import { useParams, Link, useSearchParams } from "react-router-dom";
 import AutoScrollControls from "../components/AutoScrollControls";
 import PdfViewer from "../components/PdfViewer";
 import ShareModal from "../components/ShareModal";
-import YouTubePlayer from "../components/YouTubePlayer";
+import ChordSheetMediaPlayer from "../components/ChordSheetMediaPlayer";
 import DrumMachineEditor from "../components/DrumMachineEditor";
 import DrumMachinePlayer from "../components/DrumMachinePlayer";
 import {
@@ -275,9 +275,9 @@ export default function ChordSheetPage() {
               )}
             </div>
           </div>
-          {/* YouTube Player no lugar do antigo botão "Editar Cifra" */}
+          {/* Player de mídia (vídeo do YouTube e/ou áudio da cifra) no lugar do antigo botão "Editar Cifra" */}
           <div className="w-full sm:w-80 lg:w-96 shrink-0">
-            <YouTubePlayer url={chordSheet.youtube_url} />
+            <ChordSheetMediaPlayer chordSheet={chordSheet} />
             {chordSheet.drum_machine && <DrumMachinePlayer drumMachineUrl={chordSheet.drum_machine} playRequest={drumPlayRequest} stopRequest={drumStopRequest} onPlayingChange={setDrumIsPlaying} />}
           </div>
         </div>

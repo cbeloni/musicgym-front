@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import AutoScrollControls from "../components/AutoScrollControls";
 import PdfViewer from "../components/PdfViewer";
-import YouTubePlayer from "../components/YouTubePlayer";
+import ChordSheetMediaPlayer from "../components/ChordSheetMediaPlayer";
 import { fetchChordSheetByToken, isPdfAsset, recordChordSheetView, resolveChordSheetAsset } from "../services/api";
 
 // Regex para identificar linhas de tablatura
@@ -88,7 +88,7 @@ export default function SharedChordSheetPage() {
             </div>
           </div>
           <div className="w-full sm:w-80 lg:w-96 shrink-0">
-            <YouTubePlayer url={chordSheet.youtube_url} />
+            <ChordSheetMediaPlayer chordSheet={chordSheet} />
           </div>
         </div>
       </header>

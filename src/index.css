@@ -56,6 +56,31 @@
   }
 }
 
+@layer components {
+  /* Player da mídia da cifra: abas "Vídeo" / "Áudio" (vídeo do YouTube x MP3 do bucket) */
+  .media-tabs {
+    @apply mb-2 flex gap-1 rounded-xl bg-slate-100 p-1;
+  }
+
+  .media-tab {
+    @apply flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase
+           tracking-wider text-slate-500 transition-all duration-150
+           hover:text-slate-800;
+  }
+
+  .media-tab.is-active {
+    @apply bg-white text-blue-700 shadow-sm;
+  }
+
+  .media-audio {
+    @apply flex flex-col items-center justify-center gap-2 rounded-xl bg-slate-50 px-3 py-6;
+  }
+
+  .media-audio-label {
+    @apply text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-400;
+  }
+}
+
 /* Auto-scroll auto-hide transition rules */
 #main-header {
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease-in-out;

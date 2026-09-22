@@ -244,6 +244,21 @@ export function isPdfAsset(item) {
   return !!item && (item.startsWith("data:application/pdf") || /\.pdf($|\?)/i.test(item));
 }
 
+/**
+ * Resolve o src do áudio da cifra.
+ * - No bucket, `audio_data` é o caminho do objeto (ex.: `audios/xxx.mp3`) e a URL
+ *   é montada com o `bucket_base_url`.
+ * - No modo legado, `audio_data` já é o data URI do áudio.
+ * Retorna string vazia quando a cifra não possui áudio.
+ */
+export function resolveChordSheetAudio(chordSheet) {
+  const audio = chordSheet?.audio_data;
+  if (!audio) return "";
+  if (audio.startsWith("data:")) return audio;
+  if (!chordSheet?.bucket_base_url) return "";
+  return `${chordSheet.bucket_base_url.replace(/\/+$/, "")}/${audio.replace(/^\/+/, "")}`;
+}
+
 export async function createChordSheet(
   title,
   artist,
@@ -253,7 +268,8 @@ export async function createChordSheet(
   youtubeUrl,
   scrollSpeed = 1,
   isPrivate = false,
-  drumMachine = null
+  drumMachine = null,
+  audioData = null
 ) {
   const { data } = await api.post("/chord-sheets", {
     title,
@@ -261,6 +277,7 @@ export async function createChordSheet(
     key_signature: keySignature || null,
     content,
     image_data: imageData && imageData.length ? imageData : null,
+    audio_data: audioData || null,
     youtube_url: youtubeUrl || null,
     drum_machine: drumMachine || null,
     scroll_speed: scrollSpeed,
@@ -279,7 +296,8 @@ export async function updateChordSheet(
   youtubeUrl,
   scrollSpeed = 1,
   isPrivate = false,
-  drumMachine = null
+  drumMachine = null,
+  audioData = null
 ) {
   const { data } = await api.put(`/chord-sheets/${id}`, {
     title,
@@ -287,6 +305,7 @@ export async function updateChordSheet(
     key_signature: keySignature || null,
     content,
     image_data: imageData && imageData.length ? imageData : null,
+    audio_data: audioData || null,
     youtube_url: youtubeUrl || null,
     drum_machine: drumMachine || null,
     scroll_speed: scrollSpeed,
