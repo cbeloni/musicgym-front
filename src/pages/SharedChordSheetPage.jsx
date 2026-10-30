@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import AutoScrollControls from "../components/AutoScrollControls";
 import PdfViewer from "../components/PdfViewer";
 import ChordSheetMediaPlayer from "../components/ChordSheetMediaPlayer";
+import ChordSheetContent from "../components/ChordSheetContent";
 import { fetchChordSheetByToken, isPdfAsset, recordChordSheetView, resolveChordSheetAsset } from "../services/api";
 
 // Regex para identificar linhas de tablatura
@@ -41,14 +42,6 @@ export default function SharedChordSheetPage() {
   const sheetHasTab = chordSheet && TAB_LINE_REGEX.test(chordSheet.content);
   const images = Array.isArray(chordSheet?.image_data) ? chordSheet.image_data : [];
   const hasImages = images.length > 0;
-
-  const renderContent = (content) => {
-    if (!tabHidden) return content;
-    return content
-      .split("\n")
-      .filter((line) => !TAB_LINE_REGEX.test(line))
-      .join("\n");
-  };
 
   if (loading) {
     return (
@@ -122,9 +115,7 @@ export default function SharedChordSheetPage() {
             })}
           </div>
         ) : (
-          <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-sm leading-8 text-slate-800">
-            {renderContent(chordSheet.content)}
-          </pre>
+          <ChordSheetContent content={chordSheet.content} tabHidden={tabHidden} />
         )}
         <div className="mt-5 border-t border-slate-100 pt-4 text-xs text-slate-500">
           <span className="font-semibold text-slate-700">Criado por:</span>{" "}

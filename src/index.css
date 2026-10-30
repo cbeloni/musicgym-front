@@ -54,6 +54,30 @@
   .label-section {
     @apply text-xs font-semibold uppercase tracking-[0.2em] text-slate-500;
   }
+
+  .chord-sheet-content {
+    @apply max-w-5xl whitespace-pre;
+  }
+
+  .chord-sheet-line {
+    @apply block min-h-7;
+  }
+
+  .chord-sheet-line--empty {
+    @apply min-h-5;
+  }
+
+  .chord-sheet-line--section {
+    @apply mt-4 min-h-9 font-sans text-sm font-bold uppercase tracking-[0.12em] text-slate-500 first:mt-0;
+  }
+
+  .chord-sheet-line--chords {
+    @apply font-semibold text-blue-700;
+  }
+
+  .chord-sheet-line--tab {
+    @apply text-slate-600;
+  }
 }
 
 @layer components {
